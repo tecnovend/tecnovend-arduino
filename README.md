@@ -8,14 +8,23 @@ y reporta el estado de la máquina (en servicio / fuera de servicio).
 
 ```
 tecnovend-arduino/
-├── tecnovend-arduino.ino   # Sketch principal
+├── tecnovend-arduino.ino   # Punto de entrada: setup() y loop()
+├── config.h                # Constantes: WiFi, API, IDs, pines, tiempos
+├── types.h                 # enum y structs compartidos (Pulse, PulseResult)
+├── globals.h / globals.cpp # Estado mutable compartido entre modulos
+├── led.h / led.cpp         # Control del LED RGB de estado
+├── wifi_manager.h/.cpp     # Conexion y persistencia de WiFi
+├── json_utils.h/.cpp       # Parseo de JSON ligero / URL encode
+├── api.h / api.cpp         # HTTP, heartbeat, config y poll de pulsos
+├── pulses.h / pulses.cpp   # Ejecucion de pulsos y cola de resultados
+├── service.h / service.cpp # Estado de servicio (pin INHIBIT) y ventas
 ├── .gitignore
 └── README.md
 ```
 
 > En el Arduino IDE el sketch principal debe llamarse igual que la carpeta que lo
-> contiene. Por eso el archivo es `tecnovend-arduino.ino` dentro de `tecnovend-arduino/`.
-> Abrí esa carpeta (o el `.ino` directamente) para compilar y subir.
+> contiene (`tecnovend-arduino.ino`). Los demás `.h`/`.cpp` se compilan
+> automáticamente al estar en la misma carpeta; aparecen como pestañas en el IDE.
 
 ## Requisitos
 
