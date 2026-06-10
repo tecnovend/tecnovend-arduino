@@ -1,0 +1,22 @@
+# Arduino IDE
+build/
+*.hex
+*.bin
+*.elf
+*.map
+
+# Carpeta de build temporal del IDE
+.build/
+.cache/
+
+# Credenciales / secretos (no commitear API keys reales)
+secrets.h
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+*.swp
