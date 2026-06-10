@@ -8,14 +8,14 @@ y reporta el estado de la máquina (en servicio / fuera de servicio).
 
 ```
 tecnovend-arduino/
-├── JavoPoint/
-│   └── JavoPoint.ino     # Sketch principal (abrir esta carpeta en el Arduino IDE)
+├── tecnovend-arduino.ino   # Sketch principal
 ├── .gitignore
 └── README.md
 ```
 
-> En el Arduino IDE, el archivo `.ino` debe vivir en una carpeta con el mismo nombre
-> (`JavoPoint/JavoPoint.ino`). Abrí esa carpeta para compilar y subir.
+> En el Arduino IDE el sketch principal debe llamarse igual que la carpeta que lo
+> contiene. Por eso el archivo es `tecnovend-arduino.ino` dentro de `tecnovend-arduino/`.
+> Abrí esa carpeta (o el `.ino` directamente) para compilar y subir.
 
 ## Requisitos
 
@@ -65,7 +65,7 @@ se borra la red guardada y se vuelve al WiFi `JavoPoint`.
 
 ## Cómo compilar y subir
 
-1. Abrí la carpeta `JavoPoint/` en el Arduino IDE.
+1. Abrí `tecnovend-arduino.ino` en el Arduino IDE.
 2. Seleccioná tu placa ESP32 y el puerto correcto.
 3. Compilá y subí (botón *Upload*).
 4. Abrí el *Monitor Serie* a `115200` baudios para ver los logs.
