@@ -14,7 +14,7 @@ static const char* API_BASE_URL = "https://tecnovend-api-production.up.railway.a
 // ID alfanumerico grabado en el firmware. El servidor lo vincula con la maquina.
 static const char* ARDUINO_ID = "ARD-7F3A9C";
 static const char* API_KEY = "";
-static const char* FW_VERSION = "1.0.5-api-arduino-id";
+static const char* FW_VERSION = "1.1.0-heartbeat-in-service-on-change";
 
 // ---- LED ----
 #define USE_RGB_LED 1

@@ -115,9 +115,12 @@ bool sendHeartbeat() {
   body += millis() / 1000;
   body += ",\"fw\":\"";
   body += FW_VERSION;
-  body += "\",\"in_service\":";
-  body += machineInService() ? "true" : "false";
+  body += "\"";
+  // in_service solo se reporta en heartbeats de cambio de estado (los que llevan reason).
+  // El keepalive periodico lo omite y el server conserva el ultimo estado conocido.
   if (heartbeatReason.length() > 0) {
+    body += ",\"in_service\":";
+    body += machineInService() ? "true" : "false";
     body += ",\"reason\":\"";
     body += jsonEscape(heartbeatReason);
     body += "\"";
