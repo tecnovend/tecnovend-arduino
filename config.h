@@ -8,11 +8,15 @@
 static const char* DEFAULT_WIFI_SSID = "JavoPoint";
 static const char* DEFAULT_WIFI_PASS = "12345678";
 
+// WiFi propio del ESP para primera configuracion sin app ni internet.
+static const char* CONFIG_PORTAL_SSID = "JavoPoint_Config";
+static const char* CONFIG_PORTAL_PASS = "12345678";
+
 // API de pulsos
 static const char* API_BASE_URL = "https://tecnovend-api-production.up.railway.app";
 
 // ID alfanumerico grabado en el firmware. El servidor lo vincula con la maquina.
-static const char* ARDUINO_ID = "ARD-7F3A9C";
+static const char* ARDUINO_ID = "TEC-7F3A9C";
 static const char* API_KEY = "";
 static const char* FW_VERSION = "1.1.0-heartbeat-in-service-on-change";
 
@@ -43,7 +47,7 @@ static const unsigned long CONFIG_OK_LED_MS = 3000;
 static const unsigned long CLIENT_WIFI_OK_LED_MS = 3000;
 static const unsigned long BOOT_SERVICE_GRACE_MS = 2UL * 60UL * 1000UL;
 static const unsigned long SALE_INHIBIT_GRACE_MS = 72UL * 1000UL;
-static const unsigned long INHIBIT_OUT_OF_SERVICE_DEBOUNCE_MS = 1000;
+static const unsigned long INHIBIT_OUT_OF_SERVICE_DEBOUNCE_MS = 3000;
 static const unsigned long SALE_START_WAIT_MS = 10000;
 static const unsigned long WIFI_RESET_HOLD_MS = 2000;
 static const int WIFI_CONNECT_ATTEMPTS = 5;

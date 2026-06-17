@@ -31,6 +31,9 @@ void setup() {
   digitalWrite(PULSE_PIN, LOW);
   setupLed();
   loadWifiConfig();
+  if (usingDefaultWifi) {
+    runWifiConfigPortal();
+  }
   connectWiFi();
   if (!skipConfigThisBoot) {
     fetchConfigOnce();

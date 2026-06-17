@@ -25,6 +25,11 @@ void setupLed() {
 }
 
 void updateStatusLed() {
+  if (configPortalActive) {
+    setLedRgb(45, 45, 0);  // Amarillo fijo: red propia activa, falta configurar WiFi.
+    return;
+  }
+
   if (!machineInService()) {
     setLedRgb(40, 0, 0);  // Rojo fijo: maquina fuera de servicio.
     return;

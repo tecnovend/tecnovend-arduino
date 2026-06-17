@@ -29,6 +29,7 @@ String machineId = "";
 String currentWifiSsid;
 String currentWifiPass;
 bool usingDefaultWifi = true;
+bool configPortalActive = false;
 
 CommunicationState communicationState = COMM_NO_CONNECTION;
 

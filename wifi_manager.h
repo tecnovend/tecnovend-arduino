@@ -9,6 +9,7 @@
 void applyDefaultWifiConfig(bool skipConfigReload);
 void loadWifiConfig();
 void resetWifiRadio();
+bool runWifiConfigPortal();
 bool connectToSelectedWiFi(bool showLedFeedback);
 bool connectWiFi();
 void checkWifiResetPin();

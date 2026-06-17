@@ -35,6 +35,7 @@ extern String machineId;
 extern String currentWifiSsid;
 extern String currentWifiPass;
 extern bool usingDefaultWifi;
+extern bool configPortalActive;
 
 extern CommunicationState communicationState;
 
