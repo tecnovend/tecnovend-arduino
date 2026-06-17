@@ -68,6 +68,15 @@ void loop() {
   updateInhibitState();
   updateStatusLed();
 
+  if (!startupHeartbeatSent &&
+      now - lastStartupHeartbeatAttemptMs >= STARTUP_HEARTBEAT_RETRY_MS) {
+    lastStartupHeartbeatAttemptMs = now;
+    if (sendServiceHeartbeat("startup", "")) {
+      startupHeartbeatSent = true;
+      lastHeartbeatMs = millis();
+    }
+  }
+
   retryPendingPulseResults();
 
   bool pollDue = now - lastPollMs >= POLL_INTERVAL_MS;

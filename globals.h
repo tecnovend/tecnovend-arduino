@@ -14,6 +14,7 @@ extern Preferences preferences;
 
 extern unsigned long lastPollMs;
 extern unsigned long lastHeartbeatMs;
+extern unsigned long lastStartupHeartbeatAttemptMs;
 extern unsigned long lastStateHeartbeatAttemptMs;
 extern unsigned long lastConfigAttemptMs;
 
@@ -26,6 +27,7 @@ extern unsigned long wifiResetLowSinceMs;
 extern bool wifiResetLatched;
 extern bool skipConfigThisBoot;
 extern bool configLoadedThisBoot;
+extern bool startupHeartbeatSent;
 
 extern int pulseValue;
 extern unsigned long pulseHighMs;

@@ -37,6 +37,7 @@ static const int WIFI_RESET_PIN = 12;
 // Si el servidor pide estrictamente 3 s, cambiar a 3000.
 static const unsigned long POLL_INTERVAL_MS = 1000;
 static const unsigned long HEARTBEAT_INTERVAL_MS = 60UL * 60UL * 1000UL;
+static const unsigned long STARTUP_HEARTBEAT_RETRY_MS = 5000;
 static const unsigned long HTTP_TIMEOUT_MS = 4000;
 static const unsigned long HEARTBEAT_TIMEOUT_MS = 2000;
 static const unsigned long RESULT_RETRY_INTERVAL_MS = 10000;

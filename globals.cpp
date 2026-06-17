@@ -8,6 +8,7 @@ Preferences preferences;
 
 unsigned long lastPollMs = 0;
 unsigned long lastHeartbeatMs = 0;
+unsigned long lastStartupHeartbeatAttemptMs = 0;
 unsigned long lastStateHeartbeatAttemptMs = 0;
 unsigned long lastConfigAttemptMs = 0;
 
@@ -20,6 +21,7 @@ unsigned long wifiResetLowSinceMs = 0;
 bool wifiResetLatched = false;
 bool skipConfigThisBoot = false;
 bool configLoadedThisBoot = false;
+bool startupHeartbeatSent = false;
 
 int pulseValue = 1;
 unsigned long pulseHighMs = 175;
