@@ -5,7 +5,7 @@
 #include "api.h"
 
 bool rawMachineInService() {
-  return digitalRead(INHIBIT_PIN) == HIGH;
+  return digitalRead(INHIBIT_PIN) == LOW;
 }
 
 bool machineInService() {

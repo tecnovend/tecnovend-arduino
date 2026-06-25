@@ -8,6 +8,10 @@
 
 static const byte DNS_PORT = 53;
 
+void wifiDisconnect() {
+  WiFi.disconnect(false, true);
+}
+
 String wifiConfigPage(const String& message) {
   String html = "<!doctype html><html><head><meta charset='utf-8'>";
   html += "<meta name='viewport' content='width=device-width,initial-scale=1'>";
@@ -42,7 +46,7 @@ void applyDefaultWifiConfig(bool skipConfigReload) {
   usingDefaultWifi = true;
   skipConfigThisBoot = skipConfigReload;
   communicationState = COMM_NO_CONNECTION;
-  WiFi.disconnect(false, true);
+  wifiDisconnect();
 }
 
 void loadWifiConfig() {
@@ -125,7 +129,7 @@ bool runWifiConfigPortal() {
 
     if (WiFi.status() != WL_CONNECTED) {
       Serial.println("WiFi del cliente no conecto. Manteniendo portal abierto.");
-      WiFi.disconnect(false, true);
+      WiFi.disconnect();
       delay(300);
       WiFi.mode(WIFI_AP);
       WiFi.softAPConfig(apIP, gateway, subnet);
@@ -164,7 +168,6 @@ bool runWifiConfigPortal() {
 
   delay(1200);
   server.stop();
-  dnsServer.stop();
   configPortalActive = false;
   WiFi.softAPdisconnect(true);
   WiFi.mode(WIFI_STA);
@@ -173,7 +176,7 @@ bool runWifiConfigPortal() {
 }
 
 void resetWifiRadio() {
-  WiFi.disconnect(false, true);
+  wifiDisconnect();
   WiFi.mode(WIFI_OFF);
   delay(300);
   WiFi.mode(WIFI_STA);
@@ -193,7 +196,7 @@ bool connectToSelectedWiFi(bool showLedFeedback) {
     Serial.print(connectedSsid);
     Serial.print(". Cambiando a ");
     Serial.println(currentWifiSsid);
-    WiFi.disconnect(false, true);
+    wifiDisconnect();
     delay(500);
   }
 
@@ -242,7 +245,7 @@ bool connectWiFi() {
       return true;
     }
 
-    WiFi.disconnect(false, true);
+    wifiDisconnect();
     delay(500);
   }
 
@@ -251,7 +254,7 @@ bool connectWiFi() {
     currentWifiSsid = DEFAULT_WIFI_SSID;
     currentWifiPass = DEFAULT_WIFI_PASS;
     usingDefaultWifi = true;
-    WiFi.disconnect(false, true);
+    wifiDisconnect();
     delay(500);
 
     for (int attempt = 1; attempt <= WIFI_CONNECT_ATTEMPTS; attempt++) {
@@ -264,7 +267,7 @@ bool connectWiFi() {
         return true;
       }
 
-      WiFi.disconnect(false, true);
+      wifiDisconnect();
       delay(500);
     }
   }
@@ -314,7 +317,7 @@ bool saveWifiConfig(const String& ssid, const String& pass) {
   currentWifiPass = pass;
   usingDefaultWifi = false;
 
-  WiFi.disconnect(false, true);
+  wifiDisconnect();
   delay(500);
 
   if (!connectToSelectedWiFi(true)) {
@@ -322,7 +325,7 @@ bool saveWifiConfig(const String& ssid, const String& pass) {
     currentWifiSsid = previousSsid;
     currentWifiPass = previousPass;
     usingDefaultWifi = previousUsingDefault;
-    WiFi.disconnect(false, true);
+    wifiDisconnect();
     delay(500);
     connectWiFi();
     return false;

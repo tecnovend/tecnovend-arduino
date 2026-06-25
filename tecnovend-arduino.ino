@@ -58,14 +58,17 @@ void setup() {
 void loop() {
   checkWifiResetPin();
 
+  unsigned long now = millis();
+  updateInhibitState();
+  updateStatusLed();
+
   if (!connectWiFi()) {
     updateStatusLed();
     delay(1000);
     return;
   }
 
-  unsigned long now = millis();
-  updateInhibitState();
+  now = millis();
   updateStatusLed();
 
   if (!startupHeartbeatSent &&

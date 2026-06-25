@@ -7,7 +7,8 @@ void setLedRgb(uint8_t red, uint8_t green, uint8_t blue) {
 #if USE_RGB_LED
   neopixelWrite(LED_PIN, red, green, blue);
 #else
-  digitalWrite(LED_PIN, (red > 0 || green > 0 || blue > 0) ? HIGH : LOW);
+  bool on = red > 0 || green > 0 || blue > 0;
+  digitalWrite(LED_PIN, LED_ACTIVE_LOW ? (on ? LOW : HIGH) : (on ? HIGH : LOW));
 #endif
 }
 
@@ -30,8 +31,8 @@ void updateStatusLed() {
     return;
   }
 
-  if (!machineInService()) {
-    setLedRgb(40, 0, 0);  // Rojo fijo: maquina fuera de servicio.
+  if (!rawMachineInService()) {
+    setLedRgb(40, 0, 0);  // Rojo fijo: pin INHIBIT abierto, maquina fuera de servicio.
     return;
   }
 
