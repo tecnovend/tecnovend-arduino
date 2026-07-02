@@ -8,10 +8,38 @@
 #include "wifi_manager.h"
 #include "service.h"
 #include "pulses.h"
+#include <esp_system.h>
 
 void addApiKeyIfNeeded(HTTPClient& http) {
   if (strlen(API_KEY) > 0) {
     http.addHeader("X-Api-Key", API_KEY);
+  }
+}
+
+const char* resetReasonText() {
+  switch (esp_reset_reason()) {
+    case ESP_RST_POWERON:
+      return "poweron";
+    case ESP_RST_EXT:
+      return "external";
+    case ESP_RST_SW:
+      return "software";
+    case ESP_RST_PANIC:
+      return "panic";
+    case ESP_RST_INT_WDT:
+      return "interrupt_wdt";
+    case ESP_RST_TASK_WDT:
+      return "task_wdt";
+    case ESP_RST_WDT:
+      return "watchdog";
+    case ESP_RST_DEEPSLEEP:
+      return "deepsleep";
+    case ESP_RST_BROWNOUT:
+      return "brownout";
+    case ESP_RST_SDIO:
+      return "sdio";
+    default:
+      return "unknown";
   }
 }
 
@@ -117,6 +145,14 @@ bool sendHeartbeat() {
   body += FW_VERSION;
   body += "\",\"in_service\":";
   body += machineInService() ? "true" : "false";
+  body += ",\"raw_inhibit\":\"";
+  body += rawMachineInService() ? "service" : "out_of_service";
+  body += "\"";
+  body += ",\"reset_reason\":";
+  body += (int)esp_reset_reason();
+  body += ",\"reset_reason_text\":\"";
+  body += resetReasonText();
+  body += "\"";
   if (heartbeatReason.length() > 0) {
     body += ",\"reason\":\"";
     body += jsonEscape(heartbeatReason);

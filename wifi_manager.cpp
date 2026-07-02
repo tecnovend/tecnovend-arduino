@@ -5,6 +5,7 @@
 #include "config.h"
 #include "globals.h"
 #include "led.h"
+#include "safety.h"
 
 static const byte DNS_PORT = 53;
 
@@ -120,6 +121,7 @@ bool runWifiConfigPortal() {
 
     unsigned long startMs = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - startMs < WIFI_CONNECT_TIMEOUT_MS) {
+      feedWatchdog();
       dnsServer.processNextRequest();
       updateStatusLed();
       delay(100);
@@ -130,7 +132,7 @@ bool runWifiConfigPortal() {
     if (WiFi.status() != WL_CONNECTED) {
       Serial.println("WiFi del cliente no conecto. Manteniendo portal abierto.");
       WiFi.disconnect();
-      delay(300);
+      watchdogDelay(300);
       WiFi.mode(WIFI_AP);
       WiFi.softAPConfig(apIP, gateway, subnet);
       WiFi.softAP(CONFIG_PORTAL_SSID, CONFIG_PORTAL_PASS);
@@ -160,13 +162,14 @@ bool runWifiConfigPortal() {
   Serial.println(apIP);
 
   while (!saved) {
+    feedWatchdog();
     dnsServer.processNextRequest();
     server.handleClient();
     updateStatusLed();
     delay(10);
   }
 
-  delay(1200);
+  watchdogDelay(1200);
   server.stop();
   configPortalActive = false;
   WiFi.softAPdisconnect(true);
@@ -178,11 +181,11 @@ bool runWifiConfigPortal() {
 void resetWifiRadio() {
   wifiDisconnect();
   WiFi.mode(WIFI_OFF);
-  delay(300);
+  watchdogDelay(300);
   WiFi.mode(WIFI_STA);
   WiFi.persistent(false);
   WiFi.setSleep(false);
-  delay(200);
+  watchdogDelay(200);
 }
 
 bool connectToSelectedWiFi(bool showLedFeedback) {
@@ -197,7 +200,7 @@ bool connectToSelectedWiFi(bool showLedFeedback) {
     Serial.print(". Cambiando a ");
     Serial.println(currentWifiSsid);
     wifiDisconnect();
-    delay(500);
+    watchdogDelay(500);
   }
 
   Serial.print("Conectando a WiFi: ");
@@ -208,9 +211,10 @@ bool connectToSelectedWiFi(bool showLedFeedback) {
 
   unsigned long startMs = millis();
   while (WiFi.status() != WL_CONNECTED) {
-    delay(100);
+    watchdogDelay(100);
     Serial.print(".");
     updateStatusLed();
+    feedWatchdog();
 
     if (millis() - startMs >= WIFI_CONNECT_TIMEOUT_MS) {
       Serial.println();
@@ -246,7 +250,7 @@ bool connectWiFi() {
     }
 
     wifiDisconnect();
-    delay(500);
+    watchdogDelay(500);
   }
 
   if (!usingDefaultWifi) {
@@ -255,7 +259,7 @@ bool connectWiFi() {
     currentWifiPass = DEFAULT_WIFI_PASS;
     usingDefaultWifi = true;
     wifiDisconnect();
-    delay(500);
+    watchdogDelay(500);
 
     for (int attempt = 1; attempt <= WIFI_CONNECT_ATTEMPTS; attempt++) {
       Serial.print("Intento WiFi estandar ");
@@ -268,7 +272,7 @@ bool connectWiFi() {
       }
 
       wifiDisconnect();
-      delay(500);
+      watchdogDelay(500);
     }
   }
 
@@ -318,7 +322,7 @@ bool saveWifiConfig(const String& ssid, const String& pass) {
   usingDefaultWifi = false;
 
   wifiDisconnect();
-  delay(500);
+  watchdogDelay(500);
 
   if (!connectToSelectedWiFi(true)) {
     Serial.println("La red nueva fallo. Volviendo a la anterior.");
@@ -326,7 +330,7 @@ bool saveWifiConfig(const String& ssid, const String& pass) {
     currentWifiPass = previousPass;
     usingDefaultWifi = previousUsingDefault;
     wifiDisconnect();
-    delay(500);
+    watchdogDelay(500);
     connectWiFi();
     return false;
   }

@@ -18,7 +18,7 @@ static const char* API_BASE_URL = "https://tecnovend-api-production.up.railway.a
 // ID alfanumerico grabado en el firmware. El servidor lo vincula con la maquina.
 static const char* ARDUINO_ID = "ARD-000002";
 static const char* API_KEY = "";
-static const char* FW_VERSION = "1.0.5-api-arduino-id";
+static const char* FW_VERSION = "1.0.6-service-hardening";
 
 // ---- LED ----
 #define USE_RGB_LED 1
@@ -42,6 +42,7 @@ static const int WIFI_RESET_PIN = 12;
 static const unsigned long POLL_INTERVAL_MS = 1000;
 static const unsigned long HEARTBEAT_INTERVAL_MS = 60UL * 60UL * 1000UL;
 static const unsigned long STARTUP_HEARTBEAT_RETRY_MS = 5000;
+static const unsigned long STARTUP_HEARTBEAT_WINDOW_MS = 2UL * 60UL * 1000UL;
 static const unsigned long HTTP_TIMEOUT_MS = 4000;
 static const unsigned long HEARTBEAT_TIMEOUT_MS = 2000;
 static const unsigned long RESULT_RETRY_INTERVAL_MS = 10000;
@@ -53,8 +54,14 @@ static const unsigned long CLIENT_WIFI_OK_LED_MS = 3000;
 static const unsigned long BOOT_SERVICE_GRACE_MS = 3000;
 static const unsigned long SALE_INHIBIT_GRACE_MS = 200UL * 1000UL;
 static const unsigned long INHIBIT_OUT_OF_SERVICE_DEBOUNCE_MS = 3000;
-static const unsigned long SALE_START_WAIT_MS = 10000;
+static const unsigned long SALE_START_WAIT_MS = 5UL * 60UL * 1000UL;
 static const unsigned long WIFI_RESET_HOLD_MS = 2000;
+static const int INHIBIT_READ_SAMPLES = 7;
+static const int INHIBIT_SERVICE_MIN_LOW_SAMPLES = 5;
 static const int WIFI_CONNECT_ATTEMPTS = 5;
 static const int SAVED_WIFI_CONNECT_ATTEMPTS = 2;
 static const int RESULT_QUEUE_SIZE = 8;
+
+// ---- Seguridad ----
+#define ENABLE_WATCHDOG 1
+static const unsigned long WATCHDOG_TIMEOUT_MS = 30000;

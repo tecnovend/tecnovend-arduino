@@ -5,7 +5,15 @@
 #include "api.h"
 
 bool rawMachineInService() {
-  return digitalRead(INHIBIT_PIN) == LOW;
+  int lowSamples = 0;
+  for (int i = 0; i < INHIBIT_READ_SAMPLES; i++) {
+    if (digitalRead(INHIBIT_PIN) == LOW) {
+      lowSamples++;
+    }
+    delayMicroseconds(150);
+  }
+
+  return lowSamples >= INHIBIT_SERVICE_MIN_LOW_SAMPLES;
 }
 
 bool machineInService() {
@@ -13,7 +21,7 @@ bool machineInService() {
 }
 
 bool canAcceptPulse() {
-  return rawMachineInService() && reportedInService && !hasObservedSalePulse;
+  return rawMachineInService();
 }
 
 void clearObservedSalePulse() {
@@ -32,6 +40,11 @@ void updateInhibitState() {
     inhibitLowActive = false;
     bootInhibitGraceActive = false;
 
+    if (!reportedInService) {
+      reportedInService = true;
+      Serial.println("Pin INHIBIT en servicio. Estado interno recuperado inmediatamente.");
+    }
+
     if (hasObservedSalePulse && saleInhibitSeen) {
       Serial.print("Venta finalizada normalmente. pulse_id=");
       Serial.println(observedSalePulse.id);
@@ -40,16 +53,11 @@ void updateInhibitState() {
 
     if (hasObservedSalePulse && !saleInhibitSeen &&
         now - observedSaleStartedMs >= SALE_START_WAIT_MS) {
-      Serial.println("No se detecto ciclo inhibit despues del pulso. Venta observada finalizada.");
+      Serial.println("No se detecto uso de maquina despues del pulso. Se libera observacion de venta.");
       clearObservedSalePulse();
     }
 
-    if (!reportedInService &&
-        now - lastStateHeartbeatAttemptMs >= STATE_HEARTBEAT_RETRY_MS) {
-      reportedInService = true;
-      lastStateHeartbeatAttemptMs = now;
-      sendServiceHeartbeat("recovered", "");
-    }
+    saleInhibitSeen = false;
 
     if (reportedInService && lastReportedInService != reportedInService &&
         now - lastStateHeartbeatAttemptMs >= STATE_HEARTBEAT_RETRY_MS) {

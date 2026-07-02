@@ -2,6 +2,7 @@
 #include "config.h"
 #include "globals.h"
 #include "service.h"
+#include "safety.h"
 
 void setLedRgb(uint8_t red, uint8_t green, uint8_t blue) {
 #if USE_RGB_LED
@@ -52,21 +53,22 @@ void updateStatusLed() {
 void blinkLedRgb(uint8_t red, uint8_t green, uint8_t blue, unsigned long durationMs) {
   unsigned long startMs = millis();
   while (millis() - startMs < durationMs) {
+    feedWatchdog();
     setLedRgb(red, green, blue);
-    delay(250);
+    watchdogDelay(250);
     setLedRgb(0, 0, 0);
-    delay(250);
+    watchdogDelay(250);
   }
 }
 
 void showConfigOkLed() {
   setLedRgb(35, 0, 45);  // Violeta: configuracion cargada OK.
-  delay(CONFIG_OK_LED_MS);
+  watchdogDelay(CONFIG_OK_LED_MS);
   setLedRgb(0, 0, 0);
 }
 
 void showClientWifiOkLed() {
   setLedRgb(45, 45, 45);  // Blanco: conectado a red WiFi del cliente.
-  delay(CLIENT_WIFI_OK_LED_MS);
+  watchdogDelay(CLIENT_WIFI_OK_LED_MS);
   setLedRgb(0, 0, 0);
 }

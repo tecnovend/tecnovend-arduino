@@ -20,10 +20,13 @@
 #include "api.h"
 #include "pulses.h"
 #include "service.h"
+#include "safety.h"
 
 void setup() {
   Serial.begin(115200);
   delay(500);
+  setupWatchdog();
+  feedWatchdog();
 
   pinMode(INHIBIT_PIN, INPUT_PULLUP);
   pinMode(WIFI_RESET_PIN, INPUT_PULLUP);
@@ -56,6 +59,7 @@ void setup() {
 }
 
 void loop() {
+  feedWatchdog();
   checkWifiResetPin();
 
   unsigned long now = millis();
@@ -64,7 +68,7 @@ void loop() {
 
   if (!connectWiFi()) {
     updateStatusLed();
-    delay(1000);
+    watchdogDelay(1000);
     return;
   }
 
@@ -74,7 +78,11 @@ void loop() {
   if (!startupHeartbeatSent &&
       now - lastStartupHeartbeatAttemptMs >= STARTUP_HEARTBEAT_RETRY_MS) {
     lastStartupHeartbeatAttemptMs = now;
-    if (sendServiceHeartbeat("startup", "")) {
+    if (now <= STARTUP_HEARTBEAT_WINDOW_MS && sendServiceHeartbeat("startup", "")) {
+      startupHeartbeatSent = true;
+      lastHeartbeatMs = millis();
+    } else if (now > STARTUP_HEARTBEAT_WINDOW_MS) {
+      sendHeartbeat();
       startupHeartbeatSent = true;
       lastHeartbeatMs = millis();
     }
@@ -89,7 +97,7 @@ void loop() {
 
     if (!ok) {
       // No bloquear mucho: el proximo intento vuelve rapido.
-      delay(100);
+      watchdogDelay(100);
     }
     return;
   }
@@ -102,5 +110,5 @@ void loop() {
     return;
   }
 
-  delay(20);
+  watchdogDelay(20);
 }

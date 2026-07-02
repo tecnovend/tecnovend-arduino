@@ -3,6 +3,7 @@
 #include "globals.h"
 #include "led.h"
 #include "api.h"
+#include "safety.h"
 
 void queuePulseResult(const Pulse& pulse, const String& status, const String& reason) {
   int slot = -1;
@@ -41,7 +42,7 @@ bool reportPulseResultWithRetries(const Pulse& pulse, const String& status, cons
     Serial.print("Reintentando resultado de pulso ");
     Serial.print(attempt);
     Serial.println("/3");
-    delay(250);
+    watchdogDelay(250);
   }
 
   queuePulseResult(pulse, status, reason);
@@ -80,14 +81,15 @@ void executePulse(const Pulse& pulse) {
   Serial.println(pulse.count);
 
   for (int i = 0; i < pulse.count; i++) {
+    feedWatchdog();
     setLed(true);
     digitalWrite(PULSE_PIN, HIGH);
-    delay(pulseHighMs);
+    watchdogDelay(pulseHighMs);
     digitalWrite(PULSE_PIN, LOW);
     setLed(false);
 
     if (i + 1 < pulse.count) {
-      delay(pulseLowMs);
+      watchdogDelay(pulseLowMs);
     }
   }
 }
