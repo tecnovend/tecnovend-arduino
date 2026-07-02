@@ -11,6 +11,7 @@
 //   - api.*          : HTTP, heartbeat, config y poll
 //   - pulses.*       : ejecucion de pulsos y cola de resultados
 //   - service.*      : estado de servicio (pin INHIBIT) y ventas
+//   - serial_status.*: diagnostico por Monitor Serie
 // ============================================================================
 
 #include "config.h"
@@ -21,10 +22,12 @@
 #include "pulses.h"
 #include "service.h"
 #include "safety.h"
+#include "serial_status.h"
 
 void setup() {
   Serial.begin(115200);
   delay(500);
+  printSerialBootStatus();
   setupWatchdog();
   feedWatchdog();
 
@@ -60,6 +63,7 @@ void setup() {
 
 void loop() {
   feedWatchdog();
+  printSerialStatusIfDue();
   checkWifiResetPin();
 
   unsigned long now = millis();

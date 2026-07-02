@@ -41,6 +41,19 @@ void feedWatchdog() {
 #endif
 }
 
+void pauseWatchdog() {
+#if ENABLE_WATCHDOG
+  esp_task_wdt_delete(NULL);
+#endif
+}
+
+void resumeWatchdog() {
+#if ENABLE_WATCHDOG
+  esp_task_wdt_add(NULL);
+  feedWatchdog();
+#endif
+}
+
 void watchdogDelay(unsigned long durationMs) {
   unsigned long startMs = millis();
   while (millis() - startMs < durationMs) {

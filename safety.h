@@ -8,4 +8,6 @@
 
 void setupWatchdog();
 void feedWatchdog();
+void pauseWatchdog();
+void resumeWatchdog();
 void watchdogDelay(unsigned long durationMs);

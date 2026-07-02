@@ -18,7 +18,7 @@ static const char* API_BASE_URL = "https://tecnovend-api-production.up.railway.a
 // ID alfanumerico grabado en el firmware. El servidor lo vincula con la maquina.
 static const char* ARDUINO_ID = "ARD-000002";
 static const char* API_KEY = "";
-static const char* FW_VERSION = "1.0.6-service-hardening";
+static const char* FW_VERSION = "1.0.9-http-wdt-no-serial";
 
 // ---- LED ----
 #define USE_RGB_LED 1
@@ -45,6 +45,7 @@ static const unsigned long STARTUP_HEARTBEAT_RETRY_MS = 5000;
 static const unsigned long STARTUP_HEARTBEAT_WINDOW_MS = 2UL * 60UL * 1000UL;
 static const unsigned long HTTP_TIMEOUT_MS = 4000;
 static const unsigned long HEARTBEAT_TIMEOUT_MS = 2000;
+static const unsigned long HTTP_CONNECT_TIMEOUT_MS = 2500;
 static const unsigned long RESULT_RETRY_INTERVAL_MS = 10000;
 static const unsigned long STATE_HEARTBEAT_RETRY_MS = 5000;
 static const unsigned long WIFI_CONNECT_TIMEOUT_MS = 12000;
@@ -65,3 +66,7 @@ static const int RESULT_QUEUE_SIZE = 8;
 // ---- Seguridad ----
 #define ENABLE_WATCHDOG 1
 static const unsigned long WATCHDOG_TIMEOUT_MS = 30000;
+
+// ---- Diagnostico por USB / Monitor Serie ----
+#define ENABLE_SERIAL_STATUS_LOG 0
+static const unsigned long SERIAL_STATUS_INTERVAL_MS = 5000;

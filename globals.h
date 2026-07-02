@@ -48,3 +48,4 @@ extern bool saleInhibitSeen;
 extern unsigned long observedSaleStartedMs;
 extern String heartbeatReason;
 extern String heartbeatAffectedPulseId;
+extern String currentNetworkOperation;

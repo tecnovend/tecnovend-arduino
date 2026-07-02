@@ -42,3 +42,4 @@ bool saleInhibitSeen = false;
 unsigned long observedSaleStartedMs = 0;
 String heartbeatReason = "";
 String heartbeatAffectedPulseId = "";
+String currentNetworkOperation = "idle";

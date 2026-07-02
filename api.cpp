@@ -8,6 +8,7 @@
 #include "wifi_manager.h"
 #include "service.h"
 #include "pulses.h"
+#include "safety.h"
 #include <esp_system.h>
 
 void addApiKeyIfNeeded(HTTPClient& http) {
@@ -44,21 +45,34 @@ const char* resetReasonText() {
 }
 
 bool httpGet(const String& url, String& response) {
+  currentNetworkOperation = "GET begin";
+  feedWatchdog();
+
   WiFiClientSecure client;
   client.setInsecure();
+  client.setTimeout((HTTP_TIMEOUT_MS / 1000) + 1);
 
   HTTPClient http;
   http.setTimeout(HTTP_TIMEOUT_MS);
+  http.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
 
   if (!http.begin(client, url)) {
     Serial.println("HTTP GET begin fallo");
     communicationState = COMM_NO_CONNECTION;
+    currentNetworkOperation = "idle";
     return false;
   }
 
   addApiKeyIfNeeded(http);
 
+  currentNetworkOperation = "GET request";
+  Serial.print("[HTTP] GET ");
+  Serial.println(url);
+  pauseWatchdog();
   int code = http.GET();
+  resumeWatchdog();
+  currentNetworkOperation = "GET response";
+
   if (code <= 0) {
     communicationState = COMM_NO_CONNECTION;
   } else if (code == HTTP_CODE_OK) {
@@ -71,33 +85,50 @@ bool httpGet(const String& url, String& response) {
     Serial.print("GET fallo. HTTP ");
     Serial.println(code);
     http.end();
+    currentNetworkOperation = "idle";
     return false;
   }
 
+  currentNetworkOperation = "GET body";
+  pauseWatchdog();
   response = http.getString();
+  resumeWatchdog();
   http.end();
+  currentNetworkOperation = "idle";
   return true;
 }
 
 bool httpPostPulseResult(const Pulse& pulse, const String& status, const String& reason) {
+  currentNetworkOperation = "ACK begin";
+  feedWatchdog();
+
   String url = String(API_BASE_URL) + "/arduino/ack/" + ARDUINO_ID + "/" + urlEncode(pulse.id);
 
   WiFiClientSecure client;
   client.setInsecure();
+  client.setTimeout((HTTP_TIMEOUT_MS / 1000) + 1);
 
   HTTPClient http;
   http.setTimeout(HTTP_TIMEOUT_MS);
+  http.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
 
   if (!http.begin(client, url)) {
     Serial.println("HTTP ACK begin fallo");
+    currentNetworkOperation = "idle";
     return false;
   }
 
   addApiKeyIfNeeded(http);
 
+  currentNetworkOperation = "ACK post";
+  Serial.print("[HTTP] ACK ");
+  Serial.println(pulse.id);
+  pauseWatchdog();
   int code = http.POST("");
   String body = http.getString();
+  resumeWatchdog();
   http.end();
+  currentNetworkOperation = "idle";
 
   if (code < 200 || code >= 300) {
     Serial.print("Resultado de pulso fallo. HTTP ");
@@ -120,16 +151,22 @@ bool sendHeartbeat() {
     return false;
   }
 
+  currentNetworkOperation = "heartbeat begin";
+  feedWatchdog();
+
   String url = String(API_BASE_URL) + "/arduino/heartbeat/" + ARDUINO_ID;
 
   WiFiClientSecure client;
   client.setInsecure();
+  client.setTimeout((HEARTBEAT_TIMEOUT_MS / 1000) + 1);
 
   HTTPClient http;
   http.setTimeout(HEARTBEAT_TIMEOUT_MS);
+  http.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
 
   if (!http.begin(client, url)) {
     Serial.println("HTTP heartbeat begin fallo");
+    currentNetworkOperation = "idle";
     return false;
   }
 
@@ -165,8 +202,13 @@ bool sendHeartbeat() {
   }
   body += "}";
 
+  currentNetworkOperation = "heartbeat post";
+  Serial.println("[HTTP] heartbeat");
+  pauseWatchdog();
   int code = http.POST(body);
+  resumeWatchdog();
   http.end();
+  currentNetworkOperation = "idle";
 
   Serial.print("heartbeat -> ");
   Serial.println(code);
