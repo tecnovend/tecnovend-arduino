@@ -11,6 +11,10 @@ unsigned long lastHeartbeatMs = 0;
 unsigned long lastStartupHeartbeatAttemptMs = 0;
 unsigned long lastStateHeartbeatAttemptMs = 0;
 unsigned long lastConfigAttemptMs = 0;
+unsigned long lastNetworkOkMs = 0;
+unsigned long lastNetworkRecoveryMs = 0;
+unsigned long lastRemoteStatusLogMs = 0;
+int consecutiveNetworkFailures = 0;
 
 bool lastReportedInService = true;
 bool reportedInService = true;

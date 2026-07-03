@@ -280,6 +280,15 @@ bool connectWiFi() {
   return false;
 }
 
+void forceWifiReconnect(const char* reason) {
+  Serial.print("Recuperacion WiFi/API solicitada: ");
+  Serial.println(reason);
+  communicationState = COMM_NO_CONNECTION;
+  wifiDisconnect();
+  watchdogDelay(300);
+  resetWifiRadio();
+}
+
 void checkWifiResetPin() {
   if (digitalRead(WIFI_RESET_PIN) == HIGH) {
     wifiResetLowSinceMs = 0;

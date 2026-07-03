@@ -14,3 +14,4 @@ bool connectToSelectedWiFi(bool showLedFeedback);
 bool connectWiFi();
 void checkWifiResetPin();
 bool saveWifiConfig(const String& ssid, const String& pass);
+void forceWifiReconnect(const char* reason);

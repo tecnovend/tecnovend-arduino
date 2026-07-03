@@ -17,6 +17,10 @@ extern unsigned long lastHeartbeatMs;
 extern unsigned long lastStartupHeartbeatAttemptMs;
 extern unsigned long lastStateHeartbeatAttemptMs;
 extern unsigned long lastConfigAttemptMs;
+extern unsigned long lastNetworkOkMs;
+extern unsigned long lastNetworkRecoveryMs;
+extern unsigned long lastRemoteStatusLogMs;
+extern int consecutiveNetworkFailures;
 
 extern bool lastReportedInService;
 extern bool reportedInService;

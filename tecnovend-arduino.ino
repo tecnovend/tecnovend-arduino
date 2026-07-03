@@ -59,6 +59,8 @@ void setup() {
   // Primer poll inmediato. El heartbeat periodico queda espaciado para reducir trafico.
   lastPollMs = millis() - POLL_INTERVAL_MS;
   lastHeartbeatMs = millis();
+  lastNetworkOkMs = millis();
+  lastRemoteStatusLogMs = millis();
 }
 
 void loop() {
@@ -93,6 +95,27 @@ void loop() {
   }
 
   retryPendingPulseResults();
+
+  bool tooManyNetworkFailures = consecutiveNetworkFailures >= NETWORK_FAILURES_BEFORE_RECOVERY;
+  bool staleNetworkLink = communicationState == COMM_NO_CONNECTION &&
+                          now - lastNetworkOkMs >= NETWORK_STALE_LINK_MS;
+  if ((tooManyNetworkFailures || staleNetworkLink) &&
+      now - lastNetworkRecoveryMs >= NETWORK_RECOVERY_COOLDOWN_MS) {
+    lastNetworkRecoveryMs = now;
+    consecutiveNetworkFailures = 0;
+    forceWifiReconnect(tooManyNetworkFailures ? "fallas consecutivas API" : "vinculo web vencido");
+    watchdogDelay(1000);
+    return;
+  }
+
+#if ENABLE_REMOTE_STATUS_LOG
+  bool statusLogDue = now - lastRemoteStatusLogMs >= REMOTE_STATUS_LOG_INTERVAL_MS;
+  if (statusLogDue) {
+    sendRemoteStatusLog();
+    lastRemoteStatusLogMs = millis();
+    return;
+  }
+#endif
 
   bool pollDue = now - lastPollMs >= POLL_INTERVAL_MS;
   if (pollDue) {

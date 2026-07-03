@@ -44,6 +44,41 @@ const char* resetReasonText() {
   }
 }
 
+void markNetworkOk() {
+  consecutiveNetworkFailures = 0;
+  lastNetworkOkMs = millis();
+}
+
+void markNetworkFail(const char* operation) {
+  consecutiveNetworkFailures++;
+  Serial.print("[NET FAIL] ");
+  Serial.print(operation);
+  Serial.print(" consecutive=");
+  Serial.println(consecutiveNetworkFailures);
+}
+
+const char* communicationStateText() {
+  switch (communicationState) {
+    case COMM_WEB_LINK_OK:
+      return "web_link_ok";
+    case COMM_API_REACHED:
+      return "api_reached";
+    case COMM_NO_CONNECTION:
+    default:
+      return "no_connection";
+  }
+}
+
+int pendingPulseResultCount() {
+  int pending = 0;
+  for (int i = 0; i < RESULT_QUEUE_SIZE; i++) {
+    if (resultQueue[i].pending) {
+      pending++;
+    }
+  }
+  return pending;
+}
+
 bool httpGet(const String& url, String& response) {
   currentNetworkOperation = "GET begin";
   feedWatchdog();
@@ -59,6 +94,7 @@ bool httpGet(const String& url, String& response) {
   if (!http.begin(client, url)) {
     Serial.println("HTTP GET begin fallo");
     communicationState = COMM_NO_CONNECTION;
+    markNetworkFail("GET begin");
     currentNetworkOperation = "idle";
     return false;
   }
@@ -75,10 +111,13 @@ bool httpGet(const String& url, String& response) {
 
   if (code <= 0) {
     communicationState = COMM_NO_CONNECTION;
+    markNetworkFail("GET request");
   } else if (code == HTTP_CODE_OK) {
     communicationState = COMM_WEB_LINK_OK;
+    markNetworkOk();
   } else {
     communicationState = COMM_API_REACHED;
+    markNetworkFail("GET http");
   }
 
   if (code != HTTP_CODE_OK) {
@@ -114,6 +153,7 @@ bool httpPostPulseResult(const Pulse& pulse, const String& status, const String&
 
   if (!http.begin(client, url)) {
     Serial.println("HTTP ACK begin fallo");
+    markNetworkFail("ACK begin");
     currentNetworkOperation = "idle";
     return false;
   }
@@ -131,6 +171,7 @@ bool httpPostPulseResult(const Pulse& pulse, const String& status, const String&
   currentNetworkOperation = "idle";
 
   if (code < 200 || code >= 300) {
+    markNetworkFail("ACK post");
     Serial.print("Resultado de pulso fallo. HTTP ");
     Serial.print(code);
     Serial.print(" body=");
@@ -138,6 +179,7 @@ bool httpPostPulseResult(const Pulse& pulse, const String& status, const String&
     return false;
   }
 
+  markNetworkOk();
   Serial.print("Resultado de pulso OK: ");
   Serial.print(pulse.id);
   Serial.print(" status=");
@@ -148,6 +190,7 @@ bool httpPostPulseResult(const Pulse& pulse, const String& status, const String&
 bool sendHeartbeat() {
   if (WiFi.status() != WL_CONNECTED) {
     WiFi.reconnect();
+    markNetworkFail("heartbeat wifi");
     return false;
   }
 
@@ -166,6 +209,7 @@ bool sendHeartbeat() {
 
   if (!http.begin(client, url)) {
     Serial.println("HTTP heartbeat begin fallo");
+    markNetworkFail("heartbeat begin");
     currentNetworkOperation = "idle";
     return false;
   }
@@ -213,7 +257,13 @@ bool sendHeartbeat() {
   Serial.print("heartbeat -> ");
   Serial.println(code);
 
-  return code >= 200 && code < 300;
+  bool ok = code >= 200 && code < 300;
+  if (ok) {
+    markNetworkOk();
+  } else {
+    markNetworkFail("heartbeat post");
+  }
+  return ok;
 }
 
 bool sendServiceHeartbeat(const String& reason, const String& affectedPulseId) {
@@ -231,6 +281,94 @@ bool sendServiceHeartbeat(const String& reason, const String& affectedPulseId) {
   }
 
   return ok;
+}
+
+bool sendRemoteStatusLog() {
+#if !ENABLE_REMOTE_STATUS_LOG
+  return false;
+#else
+  if (WiFi.status() != WL_CONNECTED) {
+    return false;
+  }
+
+  currentNetworkOperation = "status_log begin";
+  feedWatchdog();
+
+  String url = String(API_BASE_URL) + "/arduino/status/" + ARDUINO_ID;
+
+  WiFiClientSecure client;
+  client.setInsecure();
+  client.setTimeout((HEARTBEAT_TIMEOUT_MS / 1000) + 1);
+
+  HTTPClient http;
+  http.setTimeout(HEARTBEAT_TIMEOUT_MS);
+  http.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
+
+  if (!http.begin(client, url)) {
+    Serial.println("HTTP status log begin fallo");
+    currentNetworkOperation = "idle";
+    return false;
+  }
+
+  http.addHeader("Content-Type", "application/json");
+  addApiKeyIfNeeded(http);
+
+  unsigned long now = millis();
+  String body = "{";
+  body += "\"fw\":\"";
+  body += FW_VERSION;
+  body += "\",\"uptime\":";
+  body += now / 1000;
+  body += ",\"rssi\":";
+  body += WiFi.RSSI();
+  body += ",\"ssid\":\"";
+  body += jsonEscape(WiFi.SSID());
+  body += "\",\"wifi_status\":";
+  body += (int)WiFi.status();
+  body += ",\"in_service\":";
+  body += machineInService() ? "true" : "false";
+  body += ",\"raw_inhibit\":\"";
+  body += rawMachineInService() ? "service" : "out_of_service";
+  body += "\",\"communication_state\":\"";
+  body += communicationStateText();
+  body += "\",\"consecutive_network_failures\":";
+  body += consecutiveNetworkFailures;
+  body += ",\"seconds_since_network_ok\":";
+  body += (now >= lastNetworkOkMs) ? ((now - lastNetworkOkMs) / 1000) : 0;
+  body += ",\"pending_ack\":";
+  body += pendingPulseResultCount();
+  body += ",\"config_loaded\":";
+  body += configLoadedThisBoot ? "true" : "false";
+  body += ",\"startup_sent\":";
+  body += startupHeartbeatSent ? "true" : "false";
+  body += ",\"free_heap\":";
+  body += ESP.getFreeHeap();
+  body += ",\"reset_reason\":";
+  body += (int)esp_reset_reason();
+  body += ",\"reset_reason_text\":\"";
+  body += resetReasonText();
+  body += "\",\"netop\":\"";
+  body += jsonEscape(currentNetworkOperation);
+  body += "\"}";
+
+  currentNetworkOperation = "status_log post";
+  Serial.println("[HTTP] status log");
+  pauseWatchdog();
+  int code = http.POST(body);
+  resumeWatchdog();
+  http.end();
+  currentNetworkOperation = "idle";
+
+  Serial.print("status log -> ");
+  Serial.println(code);
+
+  if (code >= 200 && code < 300) {
+    markNetworkOk();
+    return true;
+  }
+
+  return false;
+#endif
 }
 
 bool fetchConfigOnce() {

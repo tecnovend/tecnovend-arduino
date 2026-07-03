@@ -107,6 +107,8 @@ void printSerialStatusIfDue() {
   Serial.print(configLoadedThisBoot ? "true" : "false");
   Serial.print(" pending_ack=");
   Serial.print(pendingAckCount());
+  Serial.print(" net_fail=");
+  Serial.print(consecutiveNetworkFailures);
   Serial.print(" netop=");
   Serial.print(currentNetworkOperation);
   Serial.print(" heap=");
