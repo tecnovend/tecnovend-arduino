@@ -6,12 +6,20 @@
 #include <WiFiClientSecure.h>
 #include <Update.h>
 #include <esp_ota_ops.h>
+#include <esp_partition.h>
 
 static bool rollbackFlag = false;
 bool otaFailedFlag = false;
 String otaFailedError = "";
 
 void setupOta() {
+  // Verificar si la tabla de particiones tiene soporte para OTA (evita crash si no hay otadata)
+  const esp_partition_t* ota_data = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA, NULL);
+  if (ota_data == NULL) {
+    Serial.println("[OTA] La tabla de particiones no tiene 'otadata'. Funciones OTA desactivadas.");
+    return;
+  }
+
   // Verificar si la partición de inicio anterior falló y se aplicó rollback
   const esp_partition_t* invalid = esp_ota_get_last_invalid_partition();
   if (invalid != NULL) {
@@ -24,7 +32,15 @@ void setupOta() {
 }
 
 void confirmFwStable() {
+  // Verificar si la tabla de particiones tiene soporte para OTA
+  const esp_partition_t* ota_data = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA, NULL);
+  if (ota_data == NULL) return;
+
   const esp_partition_t* running = esp_ota_get_running_partition();
+  if (running == NULL) {
+    Serial.println("[OTA] Warning: running partition is NULL.");
+    return;
+  }
   esp_ota_img_states_t state;
   if (esp_ota_get_state_partition(running, &state) == ESP_OK) {
     if (state == ESP_OTA_IMG_PENDING_VERIFY) {
