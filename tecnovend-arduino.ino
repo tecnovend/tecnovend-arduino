@@ -22,6 +22,7 @@
 #include "pulses.h"
 #include "service.h"
 #include "safety.h"
+#include "ota.h"
 #include "serial_status.h"
 
 void setup() {
@@ -29,6 +30,7 @@ void setup() {
   delay(500);
   printSerialBootStatus();
   setupWatchdog();
+  setupOta();
   feedWatchdog();
 
   pinMode(INHIBIT_PIN, INPUT_PULLUP);

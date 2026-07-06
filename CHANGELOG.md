@@ -3,6 +3,10 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.3] - 2026-07-06
+
+- **OTA / Actualización Remota:** Implementación de descarga Over-The-Air, verificación de rollback automático y reporte de éxitos/fallas/rollbacks al servidor en el heartbeat.
+
 ## [0.0.2] - 2026-07-06
 
 - **Seguridad / Watchdog:** Se removieron los llamados a `pauseWatchdog()` y `resumeWatchdog()` alrededor de las peticiones HTTP a la API (`GET`, `POST`, `getString`). El watchdog de 30 segundos permanece activo para reiniciar el ESP32 ante un cuelgue real de red.

@@ -9,6 +9,7 @@
 #include "service.h"
 #include "pulses.h"
 #include "safety.h"
+#include "ota.h"
 #include <esp_system.h>
 
 void addApiKeyIfNeeded(HTTPClient& http) {
@@ -211,6 +212,16 @@ bool sendHeartbeat() {
   http.addHeader("Content-Type", "application/json");
   addApiKeyIfNeeded(http);
 
+  // Determinar motivo del heartbeat si es que ocurrió una falla o rollback
+  String hbReason = heartbeatReason;
+  if (hbReason.length() == 0) {
+    if (hasOtaRollbackOccurred()) {
+      hbReason = "ota_rollback";
+    } else if (otaFailedFlag) {
+      hbReason = "ota_failed";
+    }
+  }
+
   String body = "{";
   body += "\"rssi\":";
   body += WiFi.RSSI();
@@ -228,9 +239,14 @@ bool sendHeartbeat() {
   body += ",\"reset_reason_text\":\"";
   body += resetReasonText();
   body += "\"";
-  if (heartbeatReason.length() > 0) {
+  if (hbReason.length() > 0) {
     body += ",\"reason\":\"";
-    body += jsonEscape(heartbeatReason);
+    body += jsonEscape(hbReason);
+    body += "\"";
+  }
+  if (hbReason == "ota_failed") {
+    body += ",\"ota_error\":\"";
+    body += jsonEscape(otaFailedError);
     body += "\"";
   }
   if (heartbeatAffectedPulseId.length() > 0) {
@@ -243,6 +259,11 @@ bool sendHeartbeat() {
   currentNetworkOperation = "heartbeat post";
   Serial.println("[HTTP] heartbeat");
   int code = http.POST(body);
+  
+  String responseBody = "";
+  if (code == HTTP_CODE_OK) {
+    responseBody = http.getString();
+  }
   http.end();
   currentNetworkOperation = "idle";
 
@@ -252,6 +273,26 @@ bool sendHeartbeat() {
   bool ok = code >= 200 && code < 300;
   if (ok) {
     markNetworkOk();
+    if (hasOtaRollbackOccurred()) {
+      clearOtaRollbackFlag();
+    }
+    if (otaFailedFlag) {
+      otaFailedFlag = false;
+      otaFailedError = "";
+    }
+
+    // Parsear respuesta buscando actualizacion OTA
+    if (responseBody.length() > 0) {
+      String otaObj = extractObjectField(responseBody, "ota");
+      if (otaObj.length() > 0) {
+        String otaUrl = extractStringField(otaObj, "url");
+        String otaVer = extractStringField(otaObj, "version");
+        if (otaUrl.length() > 0 && otaVer.length() > 0) {
+          Serial.printf("[HTTP] Actualizacion OTA disponible: %s -> %s\n", FW_VERSION, otaVer.c_str());
+          performOta(otaUrl, otaVer);
+        }
+      }
+    }
   } else {
     markNetworkFail("heartbeat post");
   }
