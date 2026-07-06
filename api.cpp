@@ -104,9 +104,7 @@ bool httpGet(const String& url, String& response) {
   currentNetworkOperation = "GET request";
   Serial.print("[HTTP] GET ");
   Serial.println(url);
-  pauseWatchdog();
   int code = http.GET();
-  resumeWatchdog();
   currentNetworkOperation = "GET response";
 
   if (code <= 0) {
@@ -129,9 +127,7 @@ bool httpGet(const String& url, String& response) {
   }
 
   currentNetworkOperation = "GET body";
-  pauseWatchdog();
   response = http.getString();
-  resumeWatchdog();
   http.end();
   currentNetworkOperation = "idle";
   return true;
@@ -163,10 +159,8 @@ bool httpPostPulseResult(const Pulse& pulse, const String& status, const String&
   currentNetworkOperation = "ACK post";
   Serial.print("[HTTP] ACK ");
   Serial.println(pulse.id);
-  pauseWatchdog();
   int code = http.POST("");
   String body = http.getString();
-  resumeWatchdog();
   http.end();
   currentNetworkOperation = "idle";
 
@@ -248,9 +242,7 @@ bool sendHeartbeat() {
 
   currentNetworkOperation = "heartbeat post";
   Serial.println("[HTTP] heartbeat");
-  pauseWatchdog();
   int code = http.POST(body);
-  resumeWatchdog();
   http.end();
   currentNetworkOperation = "idle";
 
@@ -353,9 +345,7 @@ bool sendRemoteStatusLog() {
 
   currentNetworkOperation = "status_log post";
   Serial.println("[HTTP] status log");
-  pauseWatchdog();
   int code = http.POST(body);
-  resumeWatchdog();
   http.end();
   currentNetworkOperation = "idle";
 
