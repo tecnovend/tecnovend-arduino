@@ -25,9 +25,6 @@ void setupOta() {
   if (invalid != NULL) {
     Serial.println("[OTA] Ultimo inicio fallo. Rollback automatico detectado.");
     rollbackFlag = true;
-  } else {
-    // Si no hay partición inválida, intentamos marcar la actual como válida si está pendiente
-    confirmFwStable();
   }
 }
 
@@ -49,6 +46,26 @@ void confirmFwStable() {
         Serial.println("[OTA] Firmware verificado. Rollback cancelado con exito.");
       } else {
         Serial.printf("[OTA] Error al cancelar rollback: %d\n", err);
+      }
+    }
+  }
+}
+
+void checkOtaTimeout() {
+  // Verificar si la tabla de particiones tiene soporte para OTA
+  const esp_partition_t* ota_data = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA, NULL);
+  if (ota_data == NULL) return;
+
+  if (millis() > 180000) { // 3 minutos de gracia para conexion de API
+    const esp_partition_t* running = esp_ota_get_running_partition();
+    if (running != NULL) {
+      esp_ota_img_states_t state;
+      if (esp_ota_get_state_partition(running, &state) == ESP_OK) {
+        if (state == ESP_OTA_IMG_PENDING_VERIFY) {
+          Serial.println("[OTA] Critico: 3 minutos sin conexion de API en nuevo firmware. Reiniciando para rollback...");
+          delay(1000);
+          ESP.restart();
+        }
       }
     }
   }
@@ -105,15 +122,14 @@ bool performOta(const String& url, const String& targetVersion) {
 
   Serial.printf("[OTA] Tamaño del binario: %d bytes\n", contentLength);
 
-  // Pausar el watchdog antes de comenzar a escribir en Flash
-  pauseWatchdog();
+  // Alimentar el watchdog antes de iniciar el borrado de flash
+  feedWatchdog();
 
   if (!Update.begin(contentLength, U_FLASH)) {
     Serial.printf("[OTA] Error al inicializar Update. Espacio insuficiente o error de particion. Codigo: %d\n", Update.getError());
     otaFailedFlag = true;
     otaFailedError = "Update.begin failed: code " + String(Update.getError());
     http.end();
-    resumeWatchdog();
     return false;
   }
 
@@ -138,7 +154,6 @@ bool performOta(const String& url, const String& targetVersion) {
         otaFailedFlag = true;
         otaFailedError = "Write error at " + String(written) + "/" + String(contentLength);
         http.end();
-        resumeWatchdog();
         return false;
       }
       written += w;
@@ -166,6 +181,5 @@ bool performOta(const String& url, const String& targetVersion) {
     otaFailedError = "Verification error (MD5/SHA256): code " + String(Update.getError());
   }
 
-  resumeWatchdog();
   return false;
 }

@@ -67,6 +67,7 @@ void setup() {
 
 void loop() {
   feedWatchdog();
+  checkOtaTimeout();
   printSerialStatusIfDue();
   checkWifiResetPin();
 

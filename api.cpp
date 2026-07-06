@@ -48,6 +48,7 @@ const char* resetReasonText() {
 void markNetworkOk() {
   consecutiveNetworkFailures = 0;
   lastNetworkOkMs = millis();
+  confirmFwStable();
 }
 
 void markNetworkFail(const char* operation) {
