@@ -3,6 +3,11 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.2] - 2026-07-06
+
+- **Seguridad / Watchdog:** Se removieron los llamados a `pauseWatchdog()` y `resumeWatchdog()` alrededor de las peticiones HTTP a la API (`GET`, `POST`, `getString`). El watchdog de 30 segundos permanece activo para reiniciar el ESP32 ante un cuelgue real de red.
+- **Versionado:** Se implementó el esquema de versionado semántico estricto (`MAJOR.MINOR.PATCH`) y proceso formalizado de releases en Git.
+
 ## [1.1.0-heartbeat-in-service-on-change] - 2026-06-16
 
 - **API / heartbeat:** `in_service` ya no se envía en cada heartbeat. Ahora solo se
