@@ -26,7 +26,7 @@ void setupOta() {
 void confirmFwStable() {
   const esp_partition_t* running = esp_ota_get_running_partition();
   esp_ota_img_states_t state;
-  if (esp_ota_get_state_metadata(running, &state) == ESP_OK) {
+  if (esp_ota_get_state_partition(running, &state) == ESP_OK) {
     if (state == ESP_OTA_IMG_PENDING_VERIFY) {
       esp_err_t err = esp_ota_mark_app_valid_cancel_rollback();
       if (err == ESP_OK) {
