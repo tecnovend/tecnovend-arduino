@@ -25,8 +25,9 @@ jobs:
       - name: Compile Firmware
         run: |
           # Compilamos especificando el FQBN de ESP32-S3 Dev Module con soporte para Flash de 16MB y PSRAM OPI (especificaciones del modulo N16R8)
+          # Al estar presente partitions.csv en la carpeta, el compilador la tomara automaticamente
           arduino-cli compile \
-            --fqbn esp32:esp32:esp32s3:FlashSize=16M,PartitionScheme=default_16MB,PSRAM=opi \
+            --fqbn esp32:esp32:esp32s3:FlashSize=16M,PSRAM=opi \
             --output-dir build \
             ./tecnovend-arduino.ino
 
