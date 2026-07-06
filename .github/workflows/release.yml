@@ -1,0 +1,45 @@
+name: Compile and Release Firmware
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Install ESP32 Platform
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32 --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+      - name: Compile Firmware
+        run: |
+          # Compilamos especificando el FQBN de ESP32-S3 Dev Module con soporte para Flash de 16MB y PSRAM OPI (especificaciones del modulo N16R8)
+          arduino-cli compile \
+            --fqbn esp32:esp32:esp32s3:FlashSize=16M,PartitionScheme=default_16MB,PSRAM=opi \
+            --output-dir build \
+            ./tecnovend-arduino.ino
+
+      - name: Rename Binary
+        run: |
+          mv build/tecnovend-arduino.ino.bin build/firmware-v${{ github.ref_name }}.bin
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/firmware-v${{ github.ref_name }}.bin
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
