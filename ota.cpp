@@ -121,7 +121,6 @@ bool performOta(const String& url, const String& targetVersion) {
         Serial.printf("[OTA] Error en escritura. Escrito=%d, Esperado=%d\n", w, c);
         otaFailedFlag = true;
         otaFailedError = "Write error at " + String(written) + "/" + String(contentLength);
-        Update.abort();
         http.end();
         resumeWatchdog();
         return false;
