@@ -290,6 +290,8 @@ bool sendHeartbeat() {
         String otaVer = extractStringField(otaObj, "version");
         if (otaUrl.length() > 0 && otaVer.length() > 0) {
           Serial.printf("[HTTP] Actualizacion OTA disponible: %s -> %s\n", FW_VERSION, otaVer.c_str());
+          // Notificar al servidor que comienza la actualización
+          sendServiceHeartbeat("ota_start", "");
           performOta(otaUrl, otaVer);
         }
       }
