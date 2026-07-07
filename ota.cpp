@@ -83,6 +83,9 @@ bool performOta(const String& url, const String& targetVersion) {
   Serial.printf("[OTA] Iniciando actualizacion a la version: %s\n", targetVersion.c_str());
   Serial.printf("[OTA] Descargando desde: %s\n", url.c_str());
 
+  // Pausar el watchdog durante el proceso de OTA (evita reseteos por handshake TLS largo o borrado de Flash)
+  pauseWatchdog();
+
   otaFailedFlag = false;
   otaFailedError = "";
 
@@ -99,6 +102,7 @@ bool performOta(const String& url, const String& targetVersion) {
     Serial.println("[OTA] Error al iniciar HTTPClient");
     otaFailedFlag = true;
     otaFailedError = "HTTPClient begin failed";
+    resumeWatchdog();
     return false;
   }
 
@@ -108,6 +112,7 @@ bool performOta(const String& url, const String& targetVersion) {
     otaFailedFlag = true;
     otaFailedError = "HTTP GET failed: " + String(httpCode);
     http.end();
+    resumeWatchdog();
     return false;
   }
 
@@ -117,34 +122,26 @@ bool performOta(const String& url, const String& targetVersion) {
     otaFailedFlag = true;
     otaFailedError = "Invalid size: " + String(contentLength);
     http.end();
+    resumeWatchdog();
     return false;
   }
 
   Serial.printf("[OTA] Tamaño del binario: %d bytes\n", contentLength);
-
-  // Alimentar el watchdog antes de iniciar el borrado de flash
-  feedWatchdog();
 
   if (!Update.begin(contentLength, U_FLASH)) {
     Serial.printf("[OTA] Error al inicializar Update. Espacio insuficiente o error de particion. Codigo: %d\n", Update.getError());
     otaFailedFlag = true;
     otaFailedError = "Update.begin failed: code " + String(Update.getError());
     http.end();
+    resumeWatchdog();
     return false;
   }
 
   WiFiClient* stream = http.getStreamPtr();
   size_t written = 0;
   uint8_t buff[1024];
-  unsigned long lastFeed = millis();
 
   while (http.connected() && written < contentLength) {
-    // Alimentar watchdog preventivamente en el loop de escritura
-    if (millis() - lastFeed > 5000) {
-      feedWatchdog();
-      lastFeed = millis();
-    }
-
     size_t size = stream->available();
     if (size > 0) {
       int c = stream->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
@@ -154,6 +151,7 @@ bool performOta(const String& url, const String& targetVersion) {
         otaFailedFlag = true;
         otaFailedError = "Write error at " + String(written) + "/" + String(contentLength);
         http.end();
+        resumeWatchdog();
         return false;
       }
       written += w;
@@ -181,5 +179,6 @@ bool performOta(const String& url, const String& targetVersion) {
     otaFailedError = "Verification error (MD5/SHA256): code " + String(Update.getError());
   }
 
+  resumeWatchdog();
   return false;
 }
