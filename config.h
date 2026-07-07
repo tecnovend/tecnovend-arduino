@@ -16,7 +16,7 @@ static const char* CONFIG_PORTAL_PASS = "12345678";
 static const char* API_BASE_URL = "https://tecnovend-api-production.up.railway.app";
 
 // ID alfanumerico grabado en el firmware. El servidor lo vincula con la maquina.
-static const char* ARDUINO_ID = "ARD-000002";
+static const char* INITIAL_ARDUINO_ID = "ARD-000002";
 static const char* API_KEY = "";
 static const char* FW_VERSION = "0.0.3";
 

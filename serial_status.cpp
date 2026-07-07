@@ -63,7 +63,7 @@ void printSerialBootStatus() {
   Serial.print("fw=");
   Serial.println(FW_VERSION);
   Serial.print("arduino_id=");
-  Serial.println(ARDUINO_ID);
+  Serial.println(arduinoId);
   Serial.print("reset_reason=");
   Serial.print((int)esp_reset_reason());
   Serial.print(" ");

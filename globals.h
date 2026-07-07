@@ -38,6 +38,7 @@ extern unsigned long pulseHighMs;
 extern unsigned long pulseLowMs;
 
 extern String machineId;
+extern String arduinoId;
 extern String currentWifiSsid;
 extern String currentWifiPass;
 extern bool usingDefaultWifi;

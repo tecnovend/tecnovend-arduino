@@ -32,6 +32,7 @@ unsigned long pulseHighMs = 175;
 unsigned long pulseLowMs = 250;
 
 String machineId = "";
+String arduinoId = "";
 String currentWifiSsid;
 String currentWifiPass;
 bool usingDefaultWifi = true;

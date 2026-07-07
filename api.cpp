@@ -139,7 +139,7 @@ bool httpPostPulseResult(const Pulse& pulse, const String& status, const String&
   currentNetworkOperation = "ACK begin";
   feedWatchdog();
 
-  String url = String(API_BASE_URL) + "/arduino/ack/" + ARDUINO_ID + "/" + urlEncode(pulse.id);
+  String url = String(API_BASE_URL) + "/arduino/ack/" + arduinoId + "/" + urlEncode(pulse.id);
 
   WiFiClientSecure client;
   client.setInsecure();
@@ -193,7 +193,7 @@ bool sendHeartbeat() {
   currentNetworkOperation = "heartbeat begin";
   feedWatchdog();
 
-  String url = String(API_BASE_URL) + "/arduino/heartbeat/" + ARDUINO_ID;
+  String url = String(API_BASE_URL) + "/arduino/heartbeat/" + arduinoId;
 
   WiFiClientSecure client;
   client.setInsecure();
@@ -328,7 +328,7 @@ bool sendRemoteStatusLog() {
   currentNetworkOperation = "status_log begin";
   feedWatchdog();
 
-  String url = String(API_BASE_URL) + "/arduino/status/" + ARDUINO_ID;
+  String url = String(API_BASE_URL) + "/arduino/status/" + arduinoId;
 
   WiFiClientSecure client;
   client.setInsecure();
@@ -404,7 +404,7 @@ bool sendRemoteStatusLog() {
 }
 
 bool fetchConfigOnce() {
-  String url = String(API_BASE_URL) + "/arduino/config/" + ARDUINO_ID;
+  String url = String(API_BASE_URL) + "/arduino/config/" + arduinoId;
   String response;
 
   if (!httpGet(url, response)) {
@@ -459,7 +459,7 @@ bool fetchConfigOnce() {
 }
 
 bool pollOnce() {
-  String url = String(API_BASE_URL) + "/arduino/poll/" + ARDUINO_ID;
+  String url = String(API_BASE_URL) + "/arduino/poll/" + arduinoId;
   String response;
 
   if (!httpGet(url, response)) {

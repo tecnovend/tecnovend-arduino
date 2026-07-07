@@ -22,7 +22,7 @@ String wifiConfigPage(const String& message) {
   html += "button{margin-top:18px;padding:12px 16px;font-size:16px}small{color:#555}</style></head><body>";
   html += "<h2>Configurar WiFi JavoPoint</h2>";
   html += "<p><small>Arduino ID: ";
-  html += ARDUINO_ID;
+  html += arduinoId;
   html += "</small></p>";
   if (message.length() > 0) {
     html += "<p><b>";
@@ -52,6 +52,18 @@ void applyDefaultWifiConfig(bool skipConfigReload) {
 
 void loadWifiConfig() {
   preferences.begin("javopoint", false);
+
+  // Cargar/inicializar el ID dinámico desde Preferences (NVS)
+  arduinoId = preferences.getString("arduino_id", "");
+  if (arduinoId.length() == 0) {
+    preferences.putString("arduino_id", INITIAL_ARDUINO_ID);
+    arduinoId = INITIAL_ARDUINO_ID;
+    Serial.print("NVS vacio. Inicializando arduinoId en Preferences: ");
+    Serial.println(arduinoId);
+  } else {
+    Serial.print("arduinoId cargado desde NVS: ");
+    Serial.println(arduinoId);
+  }
 
   if (digitalRead(WIFI_RESET_PIN) == LOW) {
     applyDefaultWifiConfig(true);
