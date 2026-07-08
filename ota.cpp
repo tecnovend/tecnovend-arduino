@@ -1,6 +1,7 @@
 #include "ota.h"
 #include "safety.h"
 #include "config.h"
+#include "globals.h"
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
@@ -82,6 +83,7 @@ void clearOtaRollbackFlag() {
 bool performOta(const String& url, const String& targetVersion) {
   Serial.printf("[OTA] Iniciando actualizacion a la version: %s\n", targetVersion.c_str());
   Serial.printf("[OTA] Descargando desde: %s\n", url.c_str());
+  setBreadcrumb("ota: begin");
 
   // Pausar el watchdog durante el proceso de OTA (evita reseteos por handshake TLS largo o borrado de Flash)
   pauseWatchdog();
@@ -106,6 +108,7 @@ bool performOta(const String& url, const String& targetVersion) {
     return false;
   }
 
+  setBreadcrumb("ota: HTTP GET");
   int httpCode = http.GET();
   if (httpCode != HTTP_CODE_OK) {
     Serial.printf("[OTA] Peticion HTTP GET fallo, codigo: %d\n", httpCode);
@@ -128,6 +131,7 @@ bool performOta(const String& url, const String& targetVersion) {
 
   Serial.printf("[OTA] Tamaño del binario: %d bytes\n", contentLength);
 
+  setBreadcrumb("ota: flash begin");
   if (!Update.begin(contentLength, U_FLASH)) {
     Serial.printf("[OTA] Error al inicializar Update. Espacio insuficiente o error de particion. Codigo: %d\n", Update.getError());
     otaFailedFlag = true;
@@ -141,6 +145,7 @@ bool performOta(const String& url, const String& targetVersion) {
   size_t written = 0;
   uint8_t buff[1024];
 
+  setBreadcrumb("ota: flashing");
   while (http.connected() && written < contentLength) {
     size_t size = stream->available();
     if (size > 0) {
@@ -161,6 +166,7 @@ bool performOta(const String& url, const String& targetVersion) {
 
   http.end();
 
+  setBreadcrumb("ota: verify");
   if (Update.end(true)) {
     Serial.println("[OTA] Descarga completada e integrada con exito.");
     if (Update.isFinished()) {
@@ -179,6 +185,7 @@ bool performOta(const String& url, const String& targetVersion) {
     otaFailedError = "Verification error (MD5/SHA256): code " + String(Update.getError());
   }
 
+  setBreadcrumb("ota: failed");
   resumeWatchdog();
   return false;
 }

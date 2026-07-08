@@ -48,3 +48,25 @@ unsigned long observedSaleStartedMs = 0;
 String heartbeatReason = "";
 String heartbeatAffectedPulseId = "";
 String currentNetworkOperation = "idle";
+
+#define RTC_BREADCRUMB_MAGIC 0xDEADE10A
+RTC_NOINIT_ATTR char rtcBreadcrumb[64];
+RTC_NOINIT_ATTR uint32_t rtcMagic;
+
+char rtcLastBreadcrumb[64] = "none";
+
+void initBreadcrumbs() {
+  if (rtcMagic == RTC_BREADCRUMB_MAGIC) {
+    strncpy(rtcLastBreadcrumb, rtcBreadcrumb, sizeof(rtcLastBreadcrumb) - 1);
+    rtcLastBreadcrumb[sizeof(rtcLastBreadcrumb) - 1] = '\0';
+  } else {
+    strcpy(rtcLastBreadcrumb, "poweron/clean");
+    rtcMagic = RTC_BREADCRUMB_MAGIC;
+  }
+  strcpy(rtcBreadcrumb, "boot");
+}
+
+void setBreadcrumb(const char* name) {
+  strncpy(rtcBreadcrumb, name, sizeof(rtcBreadcrumb) - 1);
+  rtcBreadcrumb[sizeof(rtcBreadcrumb) - 1] = '\0';
+}

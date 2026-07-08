@@ -29,6 +29,7 @@ void setup() {
   Serial.begin(115200);
   delay(500);
   printSerialBootStatus();
+  initBreadcrumbs();
   setupWatchdog();
   setupOta();
   feedWatchdog();
@@ -70,6 +71,7 @@ void setup() {
 
 void loop() {
   feedWatchdog();
+  setBreadcrumb("loop: start");
   checkOtaTimeout();
   printSerialStatusIfDue();
   checkWifiResetPin();
@@ -78,6 +80,7 @@ void loop() {
   updateInhibitState();
   updateStatusLed();
 
+  setBreadcrumb("loop: connect_wifi");
   if (!connectWiFi()) {
     updateStatusLed();
     watchdogDelay(1000);
@@ -90,6 +93,7 @@ void loop() {
   if (!startupHeartbeatSent &&
       now - lastStartupHeartbeatAttemptMs >= STARTUP_HEARTBEAT_RETRY_MS) {
     lastStartupHeartbeatAttemptMs = now;
+    setBreadcrumb("loop: startup_heartbeat");
     if (now <= STARTUP_HEARTBEAT_WINDOW_MS && sendServiceHeartbeat("startup", "")) {
       startupHeartbeatSent = true;
       lastHeartbeatMs = millis();
@@ -109,6 +113,7 @@ void loop() {
       now - lastNetworkRecoveryMs >= NETWORK_RECOVERY_COOLDOWN_MS) {
     lastNetworkRecoveryMs = now;
     consecutiveNetworkFailures = 0;
+    setBreadcrumb("loop: wifi_recovery");
     forceWifiReconnect(tooManyNetworkFailures ? "fallas consecutivas API" : "vinculo web vencido");
     watchdogDelay(1000);
     return;
@@ -117,6 +122,7 @@ void loop() {
 #if ENABLE_REMOTE_STATUS_LOG
   bool statusLogDue = now - lastRemoteStatusLogMs >= REMOTE_STATUS_LOG_INTERVAL_MS;
   if (statusLogDue) {
+    setBreadcrumb("loop: status_log");
     sendRemoteStatusLog();
     lastRemoteStatusLogMs = millis();
     return;
@@ -125,6 +131,7 @@ void loop() {
 
   bool pollDue = now - lastPollMs >= POLL_INTERVAL_MS;
   if (pollDue) {
+    setBreadcrumb("loop: poll");
     bool ok = pollOnce();
     lastPollMs = millis();
 
@@ -138,10 +145,12 @@ void loop() {
   bool heartbeatDue = now - lastHeartbeatMs >= HEARTBEAT_INTERVAL_MS;
 
   if (heartbeatDue) {
+    setBreadcrumb("loop: regular_heartbeat");
     sendHeartbeat();
     lastHeartbeatMs = millis();
     return;
   }
 
+  setBreadcrumb("loop: idle");
   watchdogDelay(20);
 }

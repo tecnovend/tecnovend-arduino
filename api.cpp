@@ -83,6 +83,7 @@ int pendingPulseResultCount() {
 
 bool httpGet(const String& url, String& response) {
   currentNetworkOperation = "GET begin";
+  setBreadcrumb("httpGet: begin");
   feedWatchdog();
 
   WiFiClientSecure client;
@@ -106,6 +107,7 @@ bool httpGet(const String& url, String& response) {
   currentNetworkOperation = "GET request";
   Serial.print("[HTTP] GET ");
   Serial.println(url);
+  setBreadcrumb("httpGet: GET request");
   int code = http.GET();
   currentNetworkOperation = "GET response";
 
@@ -129,14 +131,17 @@ bool httpGet(const String& url, String& response) {
   }
 
   currentNetworkOperation = "GET body";
+  setBreadcrumb("httpGet: getString");
   response = http.getString();
   http.end();
   currentNetworkOperation = "idle";
+  setBreadcrumb("httpGet: end");
   return true;
 }
 
 bool httpPostPulseResult(const Pulse& pulse, const String& status, const String& reason) {
   currentNetworkOperation = "ACK begin";
+  setBreadcrumb("httpACK: begin");
   feedWatchdog();
 
   String url = String(API_BASE_URL) + "/arduino/ack/" + arduinoId + "/" + urlEncode(pulse.id);
@@ -161,10 +166,13 @@ bool httpPostPulseResult(const Pulse& pulse, const String& status, const String&
   currentNetworkOperation = "ACK post";
   Serial.print("[HTTP] ACK ");
   Serial.println(pulse.id);
+  setBreadcrumb("httpACK: POST");
   int code = http.POST("");
+  setBreadcrumb("httpACK: getString");
   String body = http.getString();
   http.end();
   currentNetworkOperation = "idle";
+  setBreadcrumb("httpACK: end");
 
   if (code < 200 || code >= 300) {
     markNetworkFail("ACK post");
@@ -191,6 +199,7 @@ bool sendHeartbeat() {
   }
 
   currentNetworkOperation = "heartbeat begin";
+  setBreadcrumb("heartbeat: begin");
   feedWatchdog();
 
   String url = String(API_BASE_URL) + "/arduino/heartbeat/" + arduinoId;
@@ -259,14 +268,17 @@ bool sendHeartbeat() {
 
   currentNetworkOperation = "heartbeat post";
   Serial.println("[HTTP] heartbeat");
+  setBreadcrumb("heartbeat: POST");
   int code = http.POST(body);
   
   String responseBody = "";
   if (code == HTTP_CODE_OK) {
+    setBreadcrumb("heartbeat: getString");
     responseBody = http.getString();
   }
   http.end();
   currentNetworkOperation = "idle";
+  setBreadcrumb("heartbeat: end");
 
   Serial.print("heartbeat -> ");
   Serial.println(code);
@@ -328,6 +340,7 @@ bool sendRemoteStatusLog() {
   }
 
   currentNetworkOperation = "status_log begin";
+  setBreadcrumb("statusLog: begin");
   feedWatchdog();
 
   String url = String(API_BASE_URL) + "/arduino/status/" + arduinoId;
@@ -385,13 +398,17 @@ bool sendRemoteStatusLog() {
   body += resetReasonText();
   body += "\",\"netop\":\"";
   body += jsonEscape(currentNetworkOperation);
+  body += "\",\"last_breadcrumb\":\"";
+  body += jsonEscape(String(rtcLastBreadcrumb));
   body += "\"}";
 
   currentNetworkOperation = "status_log post";
   Serial.println("[HTTP] status log");
+  setBreadcrumb("statusLog: POST");
   int code = http.POST(body);
   http.end();
   currentNetworkOperation = "idle";
+  setBreadcrumb("statusLog: end");
 
   Serial.print("status log -> ");
   Serial.println(code);

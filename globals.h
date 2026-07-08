@@ -54,3 +54,6 @@ extern unsigned long observedSaleStartedMs;
 extern String heartbeatReason;
 extern String heartbeatAffectedPulseId;
 extern String currentNetworkOperation;
+extern char rtcLastBreadcrumb[64];
+void initBreadcrumbs();
+void setBreadcrumb(const char* name);
