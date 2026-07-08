@@ -49,6 +49,9 @@ void setup() {
     Serial.println("Config web omitida por reset WiFi. La placa queda en JavoPoint.");
   }
 
+  // Reportar log de estado inicial para diagnóstico remoto inmediato
+  sendRemoteStatusLog();
+
   reportedInService = true;
   lastReportedInService = reportedInService;
   if (!rawMachineInService()) {
