@@ -19,7 +19,11 @@ void addApiKeyIfNeeded(HTTPClient& http) {
 }
 
 const char* resetReasonText() {
-  switch (esp_reset_reason()) {
+  esp_reset_reason_t reason = esp_reset_reason();
+  if (reason == ESP_RST_SW && String(rtcLastBreadcrumb) == "reboot: wifi stale") {
+    return "software: wifi stale";
+  }
+  switch (reason) {
     case ESP_RST_POWERON:
       return "poweron";
     case ESP_RST_EXT:

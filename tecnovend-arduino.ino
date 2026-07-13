@@ -77,6 +77,16 @@ void loop() {
   checkWifiResetPin();
 
   unsigned long now = millis();
+
+  // Si lleva mas de 30 minutos sin conexion exitosa a la API, reiniciamos el chip
+  unsigned long tiempoSinInternet = (lastNetworkOkMs > 0) ? (now - lastNetworkOkMs) : now;
+  if (tiempoSinInternet >= 30UL * 60UL * 1000UL) {
+    setBreadcrumb("reboot: wifi stale");
+    Serial.println("[SYSTEM] Alerta: Sin conexion por 30 minutos. Reiniciando chip...");
+    delay(500);
+    ESP.restart();
+  }
+
   updateInhibitState();
   updateStatusLed();
 
