@@ -269,7 +269,7 @@ bool sendHeartbeat() {
     }
 
     // Parsear respuesta buscando actualizacion OTA
-    if (responseBody.length() > 0) {
+    if (responseBody.length() > 0 && hbReason != "ota_start" && hbReason != "ota_failed" && hbReason != "ota_rollback") {
       String otaObj = extractObjectField(responseBody, "ota");
       if (otaObj.length() > 0) {
         String otaUrl = extractStringField(otaObj, "url");
