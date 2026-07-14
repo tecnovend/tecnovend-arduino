@@ -85,109 +85,102 @@ int pendingPulseResultCount() {
   return pending;
 }
 
-bool httpGet(const String& url, String& response) {
-  currentNetworkOperation = "GET begin";
-  setBreadcrumb("httpGet: begin");
+// Variables estáticas para persistencia (Keep-Alive)
+static WiFiClientSecure keepAliveClient;
+static HTTPClient keepAliveHttp;
+static bool keepAliveActive = false;
+
+// Contadores de diagnóstico para el status_log
+static unsigned int sslHandshakesCount = 0;
+static unsigned int connectionReusesCount = 0;
+static unsigned int connectionLossesCount = 0;
+
+int executeHttpRequest(const String& url, const String& method, const String& requestBody, String& responseBody) {
   feedWatchdog();
+  
+  if (!keepAliveActive) {
+    keepAliveClient.setInsecure();
+    keepAliveClient.setTimeout((HTTP_TIMEOUT_MS / 1000) + 1);
+    keepAliveHttp.setTimeout(HTTP_TIMEOUT_MS);
+    keepAliveHttp.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
 
-  WiFiClientSecure client;
-  client.setInsecure();
-  client.setTimeout((HTTP_TIMEOUT_MS / 1000) + 1);
-
-  HTTPClient http;
-  http.setTimeout(HTTP_TIMEOUT_MS);
-  http.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
-
-  if (!http.begin(client, url)) {
-    Serial.println("HTTP GET begin fallo");
-    communicationState = COMM_NO_CONNECTION;
-    markNetworkFail("GET begin");
-    currentNetworkOperation = "idle";
-    return false;
+    Serial.println("[HTTP-REUSE] Iniciando nueva conexion HTTPS...");
+    setBreadcrumb("http: new_conn");
+    sslHandshakesCount++;
+    
+    if (!keepAliveHttp.begin(keepAliveClient, url)) {
+      Serial.println("HTTP begin fallo");
+      communicationState = COMM_NO_CONNECTION;
+      markNetworkFail("begin");
+      return -1;
+    }
+    keepAliveHttp.setReuse(true);
+    keepAliveActive = true;
+  } else {
+    Serial.println("[HTTP-REUSE] Reutilizando conexion HTTPS existente...");
+    setBreadcrumb("http: reuse");
+    connectionReusesCount++;
+    keepAliveHttp.setURL(url);
   }
 
-  addApiKeyIfNeeded(http);
+  addApiKeyIfNeeded(keepAliveHttp);
 
-  currentNetworkOperation = "GET request";
-  Serial.print("[HTTP] GET ");
-  Serial.println(url);
-  setBreadcrumb("httpGet: GET request");
-  int code = http.GET();
-  currentNetworkOperation = "GET response";
+  int code = 0;
+  if (method == "GET") {
+    code = keepAliveHttp.GET();
+  } else if (method == "POST") {
+    keepAliveHttp.addHeader("Content-Type", "application/json");
+    code = keepAliveHttp.POST(requestBody);
+  }
 
   if (code <= 0) {
     communicationState = COMM_NO_CONNECTION;
-    markNetworkFail("GET request");
+    markNetworkFail("request fail");
+    Serial.printf("[HTTP-REUSE] Error en request (%s): %d. Cerrando socket...\n", method.c_str(), code);
+    setBreadcrumb("http: conn_lost");
+    connectionLossesCount++;
+    
+    keepAliveHttp.end();
+    keepAliveActive = false;
   } else if (code == HTTP_CODE_OK) {
     communicationState = COMM_WEB_LINK_OK;
     markNetworkOk();
+    responseBody = keepAliveHttp.getString();
   } else {
     communicationState = COMM_API_REACHED;
-    markNetworkFail("GET http");
+    markNetworkFail("http error");
+    responseBody = keepAliveHttp.getString();
   }
 
-  if (code != HTTP_CODE_OK) {
-    Serial.print("GET fallo. HTTP ");
-    Serial.println(code);
-    http.end();
-    currentNetworkOperation = "idle";
-    return false;
-  }
+  return code;
+}
 
-  currentNetworkOperation = "GET body";
-  setBreadcrumb("httpGet: getString");
-  response = http.getString();
-  http.end();
+bool httpGet(const String& url, String& response) {
+  currentNetworkOperation = "GET request";
+  setBreadcrumb("httpGet: begin");
+  int code = executeHttpRequest(url, "GET", "", response);
   currentNetworkOperation = "idle";
-  setBreadcrumb("httpGet: end");
-  return true;
+  return code == HTTP_CODE_OK;
 }
 
 bool httpPostPulseResult(const Pulse& pulse, const String& status, const String& reason) {
-  currentNetworkOperation = "ACK begin";
+  currentNetworkOperation = "ACK post";
   setBreadcrumb("httpACK: begin");
-  feedWatchdog();
 
   String url = String(API_BASE_URL) + "/arduino/ack/" + arduinoId + "/" + urlEncode(pulse.id);
-
-  WiFiClientSecure client;
-  client.setInsecure();
-  client.setTimeout((HTTP_TIMEOUT_MS / 1000) + 1);
-
-  HTTPClient http;
-  http.setTimeout(HTTP_TIMEOUT_MS);
-  http.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
-
-  if (!http.begin(client, url)) {
-    Serial.println("HTTP ACK begin fallo");
-    markNetworkFail("ACK begin");
-    currentNetworkOperation = "idle";
-    return false;
-  }
-
-  addApiKeyIfNeeded(http);
-
-  currentNetworkOperation = "ACK post";
-  Serial.print("[HTTP] ACK ");
-  Serial.println(pulse.id);
-  setBreadcrumb("httpACK: POST");
-  int code = http.POST("");
-  setBreadcrumb("httpACK: getString");
-  String body = http.getString();
-  http.end();
+  String responseBody;
+  
+  int code = executeHttpRequest(url, "POST", "", responseBody);
   currentNetworkOperation = "idle";
-  setBreadcrumb("httpACK: end");
 
   if (code < 200 || code >= 300) {
-    markNetworkFail("ACK post");
     Serial.print("Resultado de pulso fallo. HTTP ");
     Serial.print(code);
     Serial.print(" body=");
-    Serial.println(body);
+    Serial.println(responseBody);
     return false;
   }
 
-  markNetworkOk();
   Serial.print("Resultado de pulso OK: ");
   Serial.print(pulse.id);
   Serial.print(" status=");
@@ -207,24 +200,6 @@ bool sendHeartbeat() {
   feedWatchdog();
 
   String url = String(API_BASE_URL) + "/arduino/heartbeat/" + arduinoId;
-
-  WiFiClientSecure client;
-  client.setInsecure();
-  client.setTimeout((HEARTBEAT_TIMEOUT_MS / 1000) + 1);
-
-  HTTPClient http;
-  http.setTimeout(HEARTBEAT_TIMEOUT_MS);
-  http.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
-
-  if (!http.begin(client, url)) {
-    Serial.println("HTTP heartbeat begin fallo");
-    markNetworkFail("heartbeat begin");
-    currentNetworkOperation = "idle";
-    return false;
-  }
-
-  http.addHeader("Content-Type", "application/json");
-  addApiKeyIfNeeded(http);
 
   // Determinar motivo del heartbeat si es que ocurrió una falla o rollback
   String hbReason = heartbeatReason;
@@ -273,14 +248,10 @@ bool sendHeartbeat() {
   currentNetworkOperation = "heartbeat post";
   Serial.println("[HTTP] heartbeat");
   setBreadcrumb("heartbeat: POST");
-  int code = http.POST(body);
-  
+
   String responseBody = "";
-  if (code == HTTP_CODE_OK) {
-    setBreadcrumb("heartbeat: getString");
-    responseBody = http.getString();
-  }
-  http.end();
+  int code = executeHttpRequest(url, "POST", body, responseBody);
+  
   currentNetworkOperation = "idle";
   setBreadcrumb("heartbeat: end");
 
@@ -289,7 +260,6 @@ bool sendHeartbeat() {
 
   bool ok = code >= 200 && code < 300;
   if (ok) {
-    markNetworkOk();
     if (hasOtaRollbackOccurred()) {
       clearOtaRollbackFlag();
     }
@@ -312,8 +282,6 @@ bool sendHeartbeat() {
         }
       }
     }
-  } else {
-    markNetworkFail("heartbeat post");
   }
   return ok;
 }
@@ -348,23 +316,6 @@ bool sendRemoteStatusLog() {
   feedWatchdog();
 
   String url = String(API_BASE_URL) + "/arduino/status/" + arduinoId;
-
-  WiFiClientSecure client;
-  client.setInsecure();
-  client.setTimeout((HEARTBEAT_TIMEOUT_MS / 1000) + 1);
-
-  HTTPClient http;
-  http.setTimeout(HEARTBEAT_TIMEOUT_MS);
-  http.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
-
-  if (!http.begin(client, url)) {
-    Serial.println("HTTP status log begin fallo");
-    currentNetworkOperation = "idle";
-    return false;
-  }
-
-  http.addHeader("Content-Type", "application/json");
-  addApiKeyIfNeeded(http);
 
   unsigned long now = millis();
   String body = "{";
@@ -404,25 +355,30 @@ bool sendRemoteStatusLog() {
   body += jsonEscape(currentNetworkOperation);
   body += "\",\"last_breadcrumb\":\"";
   body += jsonEscape(String(rtcLastBreadcrumb));
-  body += "\"}";
+  
+  // Agregar métricas de persistencia/reutilización HTTPS para diagnóstico
+  body += "\",\"ssl_handshakes\":";
+  body += sslHandshakesCount;
+  body += ",\"connection_reuses\":";
+  body += connectionReusesCount;
+  body += ",\"connection_losses\":";
+  body += connectionLossesCount;
+  body += "}";
 
   currentNetworkOperation = "status_log post";
   Serial.println("[HTTP] status log");
   setBreadcrumb("statusLog: POST");
-  int code = http.POST(body);
-  http.end();
+  
+  String responseBody;
+  int code = executeHttpRequest(url, "POST", body, responseBody);
+  
   currentNetworkOperation = "idle";
   setBreadcrumb("statusLog: end");
 
   Serial.print("status log -> ");
   Serial.println(code);
 
-  if (code >= 200 && code < 300) {
-    markNetworkOk();
-    return true;
-  }
-
-  return false;
+  return code >= 200 && code < 300;
 #endif
 }
 
