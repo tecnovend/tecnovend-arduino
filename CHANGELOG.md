@@ -3,6 +3,11 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.14] - 2026-07-16
+
+- **Branding / NVS Migration:** Se implementó un mecanismo de migración automática del almacenamiento persistente NVS de `"javopoint"` a `"vendpoint"`. En el primer arranque de esta versión, la placa copia el ID único y las credenciales WiFi al nuevo namespace y vacía el viejo, evitando intervenciones manuales en el campo.
+- **FW Bump:** Se incrementó `FW_VERSION` en `config.h` a `0.0.14`.
+
 ## [0.0.13] - 2026-07-16
 
 - **Branding / Rename:** Se renombraron las referencias visibles de "JavoPoint" por "VendPoint" (SSIDs por defecto, portal de configuración, documentación y logs). El namespace interno de Preferences se mantiene como "javopoint" para conservar configuraciones existentes tras actualizar.

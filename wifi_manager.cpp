@@ -51,26 +51,71 @@ void applyDefaultWifiConfig(bool skipConfigReload) {
 }
 
 void loadWifiConfig() {
-  preferences.begin("javopoint", false);
-
-  // Cargar/inicializar el ID dinámico desde Preferences (NVS)
+  // 1. Intentar abrir el nuevo cajón en modo lectura/escritura
+  preferences.begin("vendpoint", false);
   arduinoId = preferences.getString("arduino_id", "");
+  preferences.end(); // Lo cerramos temporalmente para operar el cajón viejo
+
+  // 2. Si no hay arduino_id en el cajón nuevo, migrar desde el viejo
   if (arduinoId.length() == 0) {
-    preferences.putString("arduino_id", INITIAL_ARDUINO_ID);
-    arduinoId = INITIAL_ARDUINO_ID;
-    Serial.print("NVS vacio. Inicializando arduinoId en Preferences: ");
-    Serial.println(arduinoId);
+    Serial.println("[NVS] Cajon 'vendpoint' vacio. Buscando cajon antiguo 'javopoint' para migrar...");
+    
+    preferences.begin("javopoint", false);
+    String oldArduinoId = preferences.getString("arduino_id", "");
+    String oldSsid = preferences.getString("wifi_ssid", "");
+    String oldPass = preferences.getString("wifi_pass", "");
+    preferences.end();
+    
+    if (oldArduinoId.length() > 0) {
+      Serial.println("[NVS] Datos encontrados en 'javopoint'. Migrando a 'vendpoint'...");
+      
+      // Guardar en el nuevo
+      preferences.begin("vendpoint", false);
+      preferences.putString("arduino_id", oldArduinoId);
+      preferences.putString("wifi_ssid", oldSsid);
+      preferences.putString("wifi_pass", oldPass);
+      preferences.end();
+      
+      // Limpiar el viejo
+      preferences.begin("javopoint", false);
+      preferences.clear();
+      preferences.end();
+      
+      arduinoId = oldArduinoId;
+      currentWifiSsid = oldSsid;
+      currentWifiPass = oldPass;
+      Serial.print("[NVS] Migracion exitosa. arduino_id=");
+      Serial.println(arduinoId);
+    } else {
+      Serial.println("[NVS] Cajon antiguo 'javopoint' tambien vacio. Inicializando nuevo...");
+      
+      // Placa nueva o reseteada: inicializar directamente en el nuevo
+      preferences.begin("vendpoint", false);
+      preferences.putString("arduino_id", INITIAL_ARDUINO_ID);
+      preferences.end();
+      
+      arduinoId = INITIAL_ARDUINO_ID;
+      currentWifiSsid = "";
+      currentWifiPass = "";
+    }
   } else {
+    // Ya estaba en el nuevo, cargamos los valores de red temporales
+    preferences.begin("vendpoint", false);
+    currentWifiSsid = preferences.getString("wifi_ssid", "");
+    currentWifiPass = preferences.getString("wifi_pass", "");
+    preferences.end();
+    
     Serial.print("arduinoId cargado desde NVS: ");
     Serial.println(arduinoId);
   }
+
+  // 3. Dejar el cajón 'vendpoint' abierto en lectura/escritura para el resto del programa
+  preferences.begin("vendpoint", false);
 
   if (digitalRead(WIFI_RESET_PIN) == LOW) {
     applyDefaultWifiConfig(true);
   }
 
-  currentWifiSsid = preferences.getString("wifi_ssid", "");
-  currentWifiPass = preferences.getString("wifi_pass", "");
   usingDefaultWifi = currentWifiSsid.length() == 0;
 
   if (usingDefaultWifi) {
