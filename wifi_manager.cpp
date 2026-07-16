@@ -16,11 +16,11 @@ void wifiDisconnect() {
 String wifiConfigPage(const String& message) {
   String html = "<!doctype html><html><head><meta charset='utf-8'>";
   html += "<meta name='viewport' content='width=device-width,initial-scale=1'>";
-  html += "<title>JavoPoint WiFi</title>";
+  html += "<title>VendPoint WiFi</title>";
   html += "<style>body{font-family:Arial,sans-serif;margin:24px;max-width:520px}";
   html += "label{display:block;margin-top:14px;font-weight:bold}input{width:100%;padding:10px;font-size:16px}";
   html += "button{margin-top:18px;padding:12px 16px;font-size:16px}small{color:#555}</style></head><body>";
-  html += "<h2>Configurar WiFi JavoPoint</h2>";
+  html += "<h2>Configurar WiFi VendPoint</h2>";
   html += "<p><small>Arduino ID: ";
   html += arduinoId;
   html += "</small></p>";
@@ -39,7 +39,7 @@ String wifiConfigPage(const String& message) {
 }
 
 void applyDefaultWifiConfig(bool skipConfigReload) {
-  Serial.println("Reset WiFi solicitado. Borrando red guardada y volviendo a JavoPoint.");
+  Serial.println("Reset WiFi solicitado. Borrando red guardada y volviendo a VendPoint.");
   preferences.remove("wifi_ssid");
   preferences.remove("wifi_pass");
   currentWifiSsid = DEFAULT_WIFI_SSID;

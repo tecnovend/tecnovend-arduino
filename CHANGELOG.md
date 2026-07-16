@@ -3,6 +3,11 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.13] - 2026-07-16
+
+- **Branding / Rename:** Se renombraron las referencias visibles de "JavoPoint" por "VendPoint" (SSIDs por defecto, portal de configuración, documentación y logs). El namespace interno de Preferences se mantiene como "javopoint" para conservar configuraciones existentes tras actualizar.
+- **FW Bump:** Se incrementó `FW_VERSION` en `config.h` a `0.0.13`.
+
 ## [0.0.12] - 2026-07-14
 
 - **Fix / OTA Bootloop:** Se corrigió la recursión síncrona infinita (stack overflow/panic) en `sendHeartbeat()` al recibir payload OTA en un heartbeat de tipo `"ota_start"`, `"ota_failed"` u `"ota_rollback"`.

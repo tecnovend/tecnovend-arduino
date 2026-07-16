@@ -63,7 +63,7 @@ int pendingAckCount() {
 void printSerialBootStatus() {
 #if ENABLE_SERIAL_STATUS_LOG
   Serial.println();
-  Serial.println("===== JAVOPOINT BOOT =====");
+  Serial.println("===== VENDPOINT BOOT =====");
   Serial.print("fw=");
   Serial.println(FW_VERSION);
   Serial.print("arduino_id=");

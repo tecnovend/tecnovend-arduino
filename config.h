@@ -5,11 +5,11 @@
 // ============================================================================
 
 // WiFi estandar para instalacion con hotspot del celular.
-static const char* DEFAULT_WIFI_SSID = "JavoPoint";
+static const char* DEFAULT_WIFI_SSID = "VendPoint";
 static const char* DEFAULT_WIFI_PASS = "12345678";
 
 // WiFi propio del ESP para primera configuracion sin app ni internet.
-static const char* CONFIG_PORTAL_SSID = "JavoPoint_Config";
+static const char* CONFIG_PORTAL_SSID = "VendPoint_Config";
 static const char* CONFIG_PORTAL_PASS = "12345678";
 
 // API de pulsos
@@ -18,7 +18,7 @@ static const char* API_BASE_URL = "https://tecnovend-api-production.up.railway.a
 // ID alfanumerico grabado en el firmware. El servidor lo vincula con la maquina.
 static const char* INITIAL_ARDUINO_ID = "ARD-000002";
 static const char* API_KEY = "";
-static const char* FW_VERSION = "0.0.12";
+static const char* FW_VERSION = "0.0.13";
 
 // ---- LED ----
 #define USE_RGB_LED 1

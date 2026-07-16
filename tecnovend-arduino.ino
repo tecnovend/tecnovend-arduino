@@ -1,5 +1,5 @@
 // ============================================================================
-// TecnoVend - Firmware JavoPoint (ESP32)
+// TecnoVend - Firmware VendPoint (ESP32)
 //
 // Punto de entrada del sketch. La logica esta repartida en modulos:
 //   - config.h       : constantes (WiFi, API, pines, tiempos)
@@ -47,7 +47,7 @@ void setup() {
   if (!skipConfigThisBoot) {
     fetchConfigOnce();
   } else {
-    Serial.println("Config web omitida por reset WiFi. La placa queda en JavoPoint.");
+    Serial.println("Config web omitida por reset WiFi. La placa queda en VendPoint.");
   }
 
   // Reportar log de estado inicial para diagnóstico remoto inmediato

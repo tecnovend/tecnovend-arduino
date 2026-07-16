@@ -1,4 +1,4 @@
-# TecnoVend — Firmware JavoPoint (ESP32)
+# TecnoVend — Firmware VendPoint (ESP32)
 
 Firmware para placa **ESP32** que conecta una máquina expendedora con la API de TecnoVend.
 La placa consulta periódicamente al servidor, ejecuta los **pulsos** pendientes (acreditaciones)
@@ -37,11 +37,11 @@ Librerías usadas (incluidas con el core ESP32):
 
 ## Configuración
 
-Los parámetros principales están al inicio de `JavoPoint/JavoPoint.ino`:
+Los parámetros principales están al inicio de config.h:
 
 | Constante            | Descripción                                              |
 |----------------------|----------------------------------------------------------|
-| `DEFAULT_WIFI_SSID`  | WiFi por defecto (hotspot de instalación: `JavoPoint`)   |
+| `DEFAULT_WIFI_SSID`  | WiFi por defecto (hotspot de instalación: `VendPoint`)   |
 | `DEFAULT_WIFI_PASS`  | Clave del WiFi por defecto                                |
 | `API_BASE_URL`       | URL base de la API de pulsos                              |
 | `ARDUINO_ID`         | ID único de la placa, vinculado a la máquina en el server |
@@ -50,7 +50,7 @@ Los parámetros principales están al inicio de `JavoPoint/JavoPoint.ino`:
 
 La red WiFi del cliente se puede guardar de forma persistente (`Preferences`) y se obtiene
 desde el endpoint de config del servidor. Manteniendo el pin de reset (`WIFI_RESET_PIN`)
-se borra la red guardada y se vuelve al WiFi `JavoPoint`.
+se borra la red guardada y se vuelve al WiFi `VendPoint`.
 
 ## Pines
 

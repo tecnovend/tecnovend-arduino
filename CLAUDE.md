@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guía para trabajar en este repositorio (firmware ESP32 del proyecto TecnoVend / JavoPoint).
+Guía para trabajar en este repositorio (firmware ESP32 del proyecto TecnoVend / VendPoint).
 
 ## Qué es esto
 
