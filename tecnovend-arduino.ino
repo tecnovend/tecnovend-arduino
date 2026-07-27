@@ -50,9 +50,6 @@ void setup() {
     Serial.println("Config web omitida por reset WiFi. La placa queda en VendPoint.");
   }
 
-  // Reportar log de estado inicial para diagnóstico remoto inmediato
-  sendRemoteStatusLog();
-
   reportedInService = true;
   lastReportedInService = reportedInService;
   if (!rawMachineInService()) {
@@ -62,11 +59,12 @@ void setup() {
     Serial.println("Inhibit activo al encender. Esperando gracia inicial antes de reportar fuera de servicio.");
   }
 
-  // Primer poll inmediato. El heartbeat periodico queda espaciado para reducir trafico.
+  // Primer poll inmediato. El heartbeat y status log quedan diferidos para un arranque instantáneo.
   lastPollMs = millis() - POLL_INTERVAL_MS;
   lastHeartbeatMs = millis();
   lastNetworkOkMs = millis();
-  lastRemoteStatusLogMs = millis();
+  // El primer status log de diagnóstico se enviará 15 segundos después del arranque.
+  lastRemoteStatusLogMs = millis() - REMOTE_STATUS_LOG_INTERVAL_MS + 15000;
 }
 
 void loop() {
