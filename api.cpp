@@ -85,11 +85,6 @@ int pendingPulseResultCount() {
   return pending;
 }
 
-// Variables estáticas para persistencia (Keep-Alive)
-static WiFiClientSecure keepAliveClient;
-static HTTPClient keepAliveHttp;
-static bool keepAliveActive = false;
-
 // Contadores de diagnóstico para el status_log
 static unsigned int sslHandshakesCount = 0;
 static unsigned int connectionReusesCount = 0;
@@ -98,60 +93,51 @@ static unsigned int connectionLossesCount = 0;
 int executeHttpRequest(const String& url, const String& method, const String& requestBody, String& responseBody) {
   feedWatchdog();
   
-  if (!keepAliveActive) {
-    keepAliveClient.setInsecure();
-    keepAliveClient.setTimeout((HTTP_TIMEOUT_MS / 1000) + 1);
-    keepAliveHttp.setTimeout(HTTP_TIMEOUT_MS);
-    keepAliveHttp.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
+  WiFiClientSecure client;
+  client.setInsecure();
+  client.setTimeout((HTTP_TIMEOUT_MS / 1000) + 1);
 
-    Serial.println("[HTTP-REUSE] Iniciando nueva conexion HTTPS...");
-    setBreadcrumb("http: new_conn");
-    sslHandshakesCount++;
-    
-    if (!keepAliveHttp.begin(keepAliveClient, url)) {
-      Serial.println("HTTP begin fallo");
-      communicationState = COMM_NO_CONNECTION;
-      markNetworkFail("begin");
-      return -1;
-    }
-    keepAliveHttp.setReuse(true);
-    keepAliveActive = true;
-  } else {
-    Serial.println("[HTTP-REUSE] Reutilizando conexion HTTPS existente...");
-    setBreadcrumb("http: reuse");
-    connectionReusesCount++;
-    keepAliveHttp.setURL(url);
+  HTTPClient http;
+  http.setTimeout(HTTP_TIMEOUT_MS);
+  http.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
+
+  setBreadcrumb("http: begin");
+  sslHandshakesCount++;
+  
+  if (!http.begin(client, url)) {
+    Serial.println("[HTTP] begin fallo");
+    communicationState = COMM_NO_CONNECTION;
+    markNetworkFail("begin");
+    return -1;
   }
 
-  addApiKeyIfNeeded(keepAliveHttp);
+  addApiKeyIfNeeded(http);
 
   int code = 0;
   if (method == "GET") {
-    code = keepAliveHttp.GET();
+    code = http.GET();
   } else if (method == "POST") {
-    keepAliveHttp.addHeader("Content-Type", "application/json");
-    code = keepAliveHttp.POST(requestBody);
+    http.addHeader("Content-Type", "application/json");
+    code = http.POST(requestBody);
   }
 
   if (code <= 0) {
     communicationState = COMM_NO_CONNECTION;
     markNetworkFail("request fail");
-    Serial.printf("[HTTP-REUSE] Error en request (%s): %d. Cerrando socket...\n", method.c_str(), code);
-    setBreadcrumb("http: conn_lost");
+    Serial.printf("[HTTP] Error en request (%s): %d\n", method.c_str(), code);
+    setBreadcrumb("http: req_fail");
     connectionLossesCount++;
-    
-    keepAliveHttp.end();
-    keepAliveActive = false;
   } else if (code == HTTP_CODE_OK) {
     communicationState = COMM_WEB_LINK_OK;
     markNetworkOk();
-    responseBody = keepAliveHttp.getString();
+    responseBody = http.getString();
   } else {
     communicationState = COMM_API_REACHED;
     markNetworkFail("http error");
-    responseBody = keepAliveHttp.getString();
+    responseBody = http.getString();
   }
 
+  http.end();
   return code;
 }
 

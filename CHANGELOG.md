@@ -3,6 +3,16 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.16] - 2026-08-02
+
+- **Fix / Watchdog & SSL Stability:** Se removió la reutilización del objeto estático global `WiFiClientSecure` en `api.cpp`. Cada petición HTTPS instancie su propia conexión limpia en el stack y la destruye al finalizar con `http.end()`, eliminando los cuelgues de sockets/mbedTLS que causaban reinicios por `task_wdt`.
+- **FW Bump:** Se incrementó `FW_VERSION` en `config.h` a `0.0.16`.
+
+## [0.0.15] - 2026-07-26
+
+- **Fix / Watchdog:** Se des-inicializó el WDT por defecto de 5s del ESP32 para asegurar el timeout de 30s.
+- **FW Bump:** Se incrementó `FW_VERSION` en `config.h` a `0.0.15`.
+
 ## [0.0.14] - 2026-07-16
 
 - **Branding / NVS Migration:** Se implementó un mecanismo de migración automática del almacenamiento persistente NVS de `"javopoint"` a `"vendpoint"`. En el primer arranque de esta versión, la placa copia el ID único y las credenciales WiFi al nuevo namespace y vacía el viejo, evitando intervenciones manuales en el campo.
