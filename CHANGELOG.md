@@ -3,6 +3,11 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.18] - 2026-08-03
+
+- **Rendimiento / Red:** Se ajustó el intervalo de polling de 1000ms (1s) a 3000ms (3s) (`POLL_INTERVAL_MS = 3000`). Esto reduce el tráfico HTTPS en un 66%, elimina el encolamiento de sockets durante fluctuaciones de Wi-Fi/4G y le da espacio a la pila de red del ESP32 para procesar ACKs y liberar memoria RAM.
+- **FW Bump:** Se incrementó `FW_VERSION` en `config.h` a `0.0.18`.
+
 ## [0.0.17] - 2026-08-03
 
 - **Estabilidad / Rollback a v0.0.12:** Se restauró la implementación exacta de `safety.cpp` y el HTTPS Keep-Alive / reutilización de socket de `api.cpp` de la versión `0.0.12`. Se eliminó el `deinit()` erróneo del WDT que reseteaba la reconfiguración a 5s en ESP-IDF v5, devolviendo el Watchdog real de 30s y el Keep-Alive estable.

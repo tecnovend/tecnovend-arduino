@@ -18,7 +18,7 @@ static const char* API_BASE_URL = "https://tecnovend-api-production.up.railway.a
 // ID alfanumerico grabado en el firmware. El servidor lo vincula con la maquina.
 static const char* INITIAL_ARDUINO_ID = "ARD-000002";
 static const char* API_KEY = "";
-static const char* FW_VERSION = "0.0.17";
+static const char* FW_VERSION = "0.0.18";
 
 // ---- LED ----
 #define USE_RGB_LED 1
@@ -37,9 +37,8 @@ static const int PULSE_PIN = 13;
 static const int WIFI_RESET_PIN = 12;
 
 // ---- Tiempos ----
-// Para maxima velocidad bajar este valor. 1000 ms es mas rapido que la version original.
-// Si el servidor pide estrictamente 3 s, cambiar a 3000.
-static const unsigned long POLL_INTERVAL_MS = 1000;
+// Polling a 3000 ms (3s) para dar espacio al stack de red y evitar encolamiento de sockets.
+static const unsigned long POLL_INTERVAL_MS = 3000;
 static const unsigned long HEARTBEAT_INTERVAL_MS = 60UL * 60UL * 1000UL;
 static const unsigned long STARTUP_HEARTBEAT_RETRY_MS = 5000;
 static const unsigned long STARTUP_HEARTBEAT_WINDOW_MS = 2UL * 60UL * 1000UL;
