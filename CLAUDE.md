@@ -42,11 +42,11 @@ Si un cambio toca la **API** (rutas, parámetros o formato del body/heartbeat), 
 explícito en el CHANGELOG porque debe coordinarse con el servidor.
 
 
-### 3. No romper lo que ya anda
+### 4. Watchdog, Red y Cuelgues de Librería HTTP (IMPORTANTE)
 
-- No cambiar pines, IDs ni la URL de la API sin que el usuario lo pida explícitamente.
-- Secretos reales (API keys, claves WiFi de clientes) no se commitean: van a `secrets.h`
-  (ya ignorado por `.gitignore`).
+- **`pauseWatchdog()` / `resumeWatchdog()` alrededor de HTTP:** NO se deben colocar `pauseWatchdog()` antes de llamadas HTTP ni `resumeWatchdog()` después. Esta técnica se probó en la versión 0.0.1 (commit `e54e91f`) y **falló**, porque las librerías síncronas de Arduino (`HTTPClient` / `WiFiClientSecure`) sufren de bugs conocidos donde la llamada de lectura de socket TCP/SSL puede quedar **congelada indefinidamente** (infinite socket lockup/hang). Si el Watchdog está pausado durante esa llamada, el ESP32 queda congelado para siempre y la máquina queda inoperativa hasta un apagado/encendido manual.
+- **Configuración del Watchdog (30s vs 5s del SDK):** El Watchdog general está configurado a 30 segundos (`WATCHDOG_TIMEOUT_MS = 30000`). Sin embargo, en ESP-IDF v5 (Arduino Core 3.x), si `loopTask` se bloquea síncronamente en una llamada de red sin ceder CPU ni alimentar la tarea `IDLE`, la pila interna del SDK o el TWDT salta a los 5s si las tareas del sistema no corren.
+- **Persistencia/Keep-Alive HTTPS:** Intentar reutilizar un objeto global estático `WiFiClientSecure` (`keepAliveClient`) en el ESP32 causa corrupción de contexto `mbedtls` y cuelgues al reconectar tras un corte de socket. Las instancias de red deben ser limpias por petición o manejadas mediante reconexión asíncrona/re-instanciación controlada.
 
 ## Compilar / verificar
 
