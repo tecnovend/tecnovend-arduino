@@ -12,13 +12,13 @@ static const char* DEFAULT_WIFI_PASS = "12345678";
 static const char* CONFIG_PORTAL_SSID = "VendPoint_Config";
 static const char* CONFIG_PORTAL_PASS = "12345678";
 
-// API de pulsos
-static const char* API_BASE_URL = "https://tecnovend-api-production.up.railway.app";
+// API de pulsos (HTTP plano via Railway TCP Proxy para ultra velocidad sin sobrecarga SSL)
+static const char* API_BASE_URL = "http://yamabiko.proxy.rlwy.net:58436";
 
 // ID alfanumerico grabado en el firmware. El servidor lo vincula con la maquina.
 static const char* INITIAL_ARDUINO_ID = "ARD-000002";
 static const char* API_KEY = "";
-static const char* FW_VERSION = "0.0.20";
+static const char* FW_VERSION = "0.0.21";
 
 // ---- LED ----
 #define USE_RGB_LED 1

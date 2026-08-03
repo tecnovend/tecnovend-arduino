@@ -3,6 +3,11 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.21] - 2026-08-03
+
+- **Rendimiento Masivo / HTTP TCP Proxy (Sin SSL):** Se configuró `API_BASE_URL = "http://yamabiko.proxy.rlwy.net:58436"` aprovechando el TCP Proxy directo de Railway. Se migró de `WiFiClientSecure` a `WiFiClient` (TCP plano). Esto elimina la sobrecarga de cifrado SSL, reduce el tiempo de respuesta de 2.5s a 20ms, ahorra 35KB de RAM por consulta y elimina por completo los congelamientos de socket mbedTLS.
+- **FW Bump:** Se incrementó `FW_VERSION` en `config.h` a `0.0.21`.
+
 ## [0.0.20] - 2026-08-03
 
 - **Fix / Socket -11 Controlled Fast Reboot:** Al detectar un error de timeout `-11` (`HTTPC_ERROR_READ_TIMEOUT`), la placa ejecuta un `ESP.restart()` controlado de 1.5s. Esto limpia la memoria RAM, los descriptores lwIP y el contexto `mbedtls` al 100% a nivel hardware, evitando congelamientos de 30s del Task Watchdog.

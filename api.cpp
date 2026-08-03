@@ -1,6 +1,6 @@
 #include "api.h"
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
+#include <WiFiClient.h>
 #include "config.h"
 #include "globals.h"
 #include "json_utils.h"
@@ -89,7 +89,7 @@ int pendingPulseResultCount() {
 }
 
 // Variables estáticas para persistencia (Keep-Alive)
-static WiFiClientSecure keepAliveClient;
+static WiFiClient keepAliveClient;
 static HTTPClient keepAliveHttp;
 static bool keepAliveActive = false;
 
@@ -102,12 +102,11 @@ int executeHttpRequest(const String& url, const String& method, const String& re
   feedWatchdog();
   
   if (!keepAliveActive) {
-    keepAliveClient.setInsecure();
     keepAliveClient.setTimeout((HTTP_TIMEOUT_MS / 1000) + 1);
     keepAliveHttp.setTimeout(HTTP_TIMEOUT_MS);
     keepAliveHttp.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
 
-    Serial.println("[HTTP-REUSE] Iniciando nueva conexion HTTPS...");
+    Serial.println("[HTTP-REUSE] Iniciando nueva conexion HTTP (TCP Proxy)...");
     setBreadcrumb("http: new_conn");
     sslHandshakesCount++;
     
