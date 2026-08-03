@@ -3,6 +3,11 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.17] - 2026-08-03
+
+- **Estabilidad / Rollback a v0.0.12:** Se restauró la implementación exacta de `safety.cpp` y el HTTPS Keep-Alive / reutilización de socket de `api.cpp` de la versión `0.0.12`. Se eliminó el `deinit()` erróneo del WDT que reseteaba la reconfiguración a 5s en ESP-IDF v5, devolviendo el Watchdog real de 30s y el Keep-Alive estable.
+- **FW Bump:** Se incrementó `FW_VERSION` en `config.h` a `0.0.17`.
+
 ## [0.0.16] - 2026-08-02
 
 - **Fix / Watchdog & SSL Stability:** Se removió la reutilización del objeto estático global `WiFiClientSecure` en `api.cpp`. Cada petición HTTPS instancie su propia conexión limpia en el stack y la destruye al finalizar con `http.end()`, eliminando los cuelgues de sockets/mbedTLS que causaban reinicios por `task_wdt`.

@@ -15,14 +15,11 @@ void setupWatchdog() {
   watchdogConfig.idle_core_mask = 0; // No monitorear tareas Idle de los cores para evitar falsos positivos por carga de WiFi/red
   watchdogConfig.trigger_panic = true;
 
-  // En ESP-IDF v5, el framework de Arduino inicializa un WDT por defecto a 5s en boot.
-  // Desuscribimos la tarea y desinicializamos el WDT viejo para garantizar los 30s reales.
-  esp_task_wdt_delete(NULL);
-  esp_task_wdt_deinit();
-
-  esp_err_t initResult = esp_task_wdt_init(&watchdogConfig);
+  // En ESP-IDF v5, si el watchdog ya está inicializado por Arduino al arrancar, se debe usar reconfigure.
+  esp_err_t initResult = esp_task_wdt_reconfigure(&watchdogConfig);
   if (initResult != ESP_OK) {
-    initResult = esp_task_wdt_reconfigure(&watchdogConfig);
+    // Si falla reconfigure, intentamos init
+    initResult = esp_task_wdt_init(&watchdogConfig);
   }
   if (initResult != ESP_OK) {
     Serial.print("Watchdog init/reconfigure fallo: ");

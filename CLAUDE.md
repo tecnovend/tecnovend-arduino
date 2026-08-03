@@ -42,11 +42,11 @@ Si un cambio toca la **API** (rutas, parámetros o formato del body/heartbeat), 
 explícito en el CHANGELOG porque debe coordinarse con el servidor.
 
 
-### 4. Watchdog, Red y Cuelgues de Librería HTTP (IMPORTANTE)
+### 4. Watchdog, Red y Cuelgues de Librería HTTP (APRENDIZAJES Y REGLAS CLAVE)
 
-- **`pauseWatchdog()` / `resumeWatchdog()` alrededor de HTTP:** NO se deben colocar `pauseWatchdog()` antes de llamadas HTTP ni `resumeWatchdog()` después. Esta técnica se probó en la versión 0.0.1 (commit `e54e91f`) y **falló**, porque las librerías síncronas de Arduino (`HTTPClient` / `WiFiClientSecure`) sufren de bugs conocidos donde la llamada de lectura de socket TCP/SSL puede quedar **congelada indefinidamente** (infinite socket lockup/hang). Si el Watchdog está pausado durante esa llamada, el ESP32 queda congelado para siempre y la máquina queda inoperativa hasta un apagado/encendido manual.
-- **Configuración del Watchdog (30s vs 5s del SDK):** El Watchdog general está configurado a 30 segundos (`WATCHDOG_TIMEOUT_MS = 30000`). Sin embargo, en ESP-IDF v5 (Arduino Core 3.x), si `loopTask` se bloquea síncronamente en una llamada de red sin ceder CPU ni alimentar la tarea `IDLE`, la pila interna del SDK o el TWDT salta a los 5s si las tareas del sistema no corren.
-- **Persistencia/Keep-Alive HTTPS:** Intentar reutilizar un objeto global estático `WiFiClientSecure` (`keepAliveClient`) en el ESP32 causa corrupción de contexto `mbedtls` y cuelgues al reconectar tras un corte de socket. Las instancias de red deben ser limpias por petición o manejadas mediante reconexión asíncrona/re-instanciación controlada.
+- **`safety.cpp` y Reconfiguración de Watchdog (30s):** En ESP-IDF v5 (Arduino Core 3.x), la reconfiguración del Watchdog a 30s DEBE hacerse ÚNICAMENTE llamando a `esp_task_wdt_reconfigure(&watchdogConfig)` como en la v0.0.12. NUNCA llamar a `esp_task_wdt_deinit()` ni `esp_task_wdt_delete(NULL)` en `setupWatchdog()`, porque `deinit()` falla en tiempo de ejecución al haber tareas del sistema suscriptas, anulando los 30s y provocando que el SDK revierta al timeout por defecto de 5s.
+- **`pauseWatchdog()` / `resumeWatchdog()` alrededor de HTTP (PROHIBIDO):** NO colocar `pauseWatchdog()` alrededor de llamadas HTTP. Se probó en commit `e54e91f` y **falló**, porque si la librería síncrona de Arduino sufre un cuelgue de socket, el ESP32 queda congelado indefinidamente sin que el Watchdog lo reinicie.
+- **HTTPS Keep-Alive (v0.0.12):** La arquitectura estable de la v0.0.12 reutiliza el cliente HTTPS (`keepAliveClient` + `keepAliveHttp` con `setReuse(true)`). Esto es fundamental para evitar la matemática pesada de handshakes SSL RSA en cada poll de 1s y mantener la respuesta rápida de la máquina.
 
 ## Compilar / verificar
 
