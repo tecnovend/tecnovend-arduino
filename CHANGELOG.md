@@ -3,6 +3,11 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.22] - 2026-08-03
+
+- **Fix / Socket Idle Timeout Recovery:** Se eliminó la llamada a `ESP.restart()` ante errores `-11`. Al ser HTTP plano sobre TCP Proxy, el cierre de conexión inactiva del servidor (timeout de 5s) retornaba `-11` y provocaba reinicios continuos. Ahora ante `code <= 0`, simplemente se ejecutan `keepAliveHttp.end()` y `keepAliveClient.stop()`, permitiendo reabrir un socket limpio en la siguiente consulta sin reiniciar la placa.
+- **FW Bump:** Se incrementó `FW_VERSION` en `config.h` a `0.0.22`.
+
 ## [0.0.21] - 2026-08-03
 
 - **Rendimiento Masivo / HTTP TCP Proxy (Sin SSL):** Se configuró `API_BASE_URL = "http://yamabiko.proxy.rlwy.net:58436"` aprovechando el TCP Proxy directo de Railway. Se migró de `WiFiClientSecure` a `WiFiClient` (TCP plano). Esto elimina la sobrecarga de cifrado SSL, reduce el tiempo de respuesta de 2.5s a 20ms, ahorra 35KB de RAM por consulta y elimina por completo los congelamientos de socket mbedTLS.

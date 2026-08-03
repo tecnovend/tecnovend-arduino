@@ -138,22 +138,13 @@ int executeHttpRequest(const String& url, const String& method, const String& re
   if (code <= 0) {
     communicationState = COMM_NO_CONNECTION;
     markNetworkFail("request fail");
-    Serial.printf("[HTTP-REUSE] Error en request (%s): %d. Cerrando socket limpiamente...\n", method.c_str(), code);
+    Serial.printf("[HTTP-REUSE] Error o cierre de socket (%s): %d. Cierre limpio de socket. Proxima peticion abrira conexion nueva.\n", method.c_str(), code);
     setBreadcrumb("http: conn_lost");
     connectionLossesCount++;
     
     keepAliveHttp.end();
     keepAliveClient.stop();
     keepAliveActive = false;
-
-    if (code == -11) {
-      Serial.println("[RECOVERY] HTTP -11 (timeout) detectado. Reinicio controlado instantaneo (1.5s)...");
-      setBreadcrumb("reboot: http -11");
-      watchdogDelay(200);
-      ESP.restart();
-    } else {
-      Serial.printf("[HTTP-REUSE] Error transitorio (%d). Socket cerrado. Proximo intento abrira socket limpio sin apagar WiFi.\n", code);
-    }
   } else if (code == HTTP_CODE_OK) {
     communicationState = COMM_WEB_LINK_OK;
     markNetworkOk();

@@ -18,7 +18,7 @@ static const char* API_BASE_URL = "http://yamabiko.proxy.rlwy.net:58436";
 // ID alfanumerico grabado en el firmware. El servidor lo vincula con la maquina.
 static const char* INITIAL_ARDUINO_ID = "ARD-000002";
 static const char* API_KEY = "";
-static const char* FW_VERSION = "0.0.21";
+static const char* FW_VERSION = "0.0.22";
 
 // ---- LED ----
 #define USE_RGB_LED 1
