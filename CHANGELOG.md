@@ -3,6 +3,12 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.20] - 2026-08-03
+
+- **Fix / Socket -11 Controlled Fast Reboot:** Al detectar un error de timeout `-11` (`HTTPC_ERROR_READ_TIMEOUT`), la placa ejecuta un `ESP.restart()` controlado de 1.5s. Esto limpia la memoria RAM, los descriptores lwIP y el contexto `mbedtls` al 100% a nivel hardware, evitando congelamientos de 30s del Task Watchdog.
+- **Fix / Eliminar Parpadeo de Wi-Fi en Error -1:** Ante un error transitorio `code = -1`, la placa cierra el socket (`keepAliveClient.stop()`) sin apagar la interfaz Wi-Fi física, eliminando el parpadeo en rojo y los tiempos de reconexión innecesarios.
+- **FW Bump:** Se incrementó `FW_VERSION` en `config.h` a `0.0.20`.
+
 ## [0.0.19] - 2026-08-03
 
 - **Fix / Socket Cleanup & WiFi Recovery:** Se agregó `keepAliveClient.stop()` explícito en `executeHttpRequest()` cada vez que la petición retorna error (`code <= 0`), evitando que el socket SSL sucio de `mbedtls` congele la reconexión.

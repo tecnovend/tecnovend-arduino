@@ -23,6 +23,9 @@ const char* resetReasonText() {
   if (reason == ESP_RST_SW && String(rtcLastBreadcrumb) == "reboot: wifi stale") {
     return "software: wifi stale";
   }
+  if (reason == ESP_RST_SW && String(rtcLastBreadcrumb) == "reboot: http -11") {
+    return "software: http -11 timeout";
+  }
   switch (reason) {
     case ESP_RST_POWERON:
       return "poweron";
@@ -136,7 +139,7 @@ int executeHttpRequest(const String& url, const String& method, const String& re
   if (code <= 0) {
     communicationState = COMM_NO_CONNECTION;
     markNetworkFail("request fail");
-    Serial.printf("[HTTP-REUSE] Error en request (%s): %d. Cerrando socket...\n", method.c_str(), code);
+    Serial.printf("[HTTP-REUSE] Error en request (%s): %d. Cerrando socket limpiamente...\n", method.c_str(), code);
     setBreadcrumb("http: conn_lost");
     connectionLossesCount++;
     
@@ -144,9 +147,13 @@ int executeHttpRequest(const String& url, const String& method, const String& re
     keepAliveClient.stop();
     keepAliveActive = false;
 
-    if (code == -11 || code == -1) {
-      Serial.printf("[HTTP-REUSE] Alerta: Fallo critico de socket (%d). Forzando recuperacion de red...\n", code);
-      forceWifiReconnect("fallo HTTP socket -11/-1");
+    if (code == -11) {
+      Serial.println("[RECOVERY] HTTP -11 (timeout) detectado. Reinicio controlado instantaneo (1.5s)...");
+      setBreadcrumb("reboot: http -11");
+      watchdogDelay(200);
+      ESP.restart();
+    } else {
+      Serial.printf("[HTTP-REUSE] Error transitorio (%d). Socket cerrado. Proximo intento abrira socket limpio sin apagar WiFi.\n", code);
     }
   } else if (code == HTTP_CODE_OK) {
     communicationState = COMM_WEB_LINK_OK;
