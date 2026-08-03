@@ -3,6 +3,13 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.19] - 2026-08-03
+
+- **Fix / Socket Cleanup & WiFi Recovery:** Se agregó `keepAliveClient.stop()` explícito en `executeHttpRequest()` cada vez que la petición retorna error (`code <= 0`), evitando que el socket SSL sucio de `mbedtls` congele la reconexión.
+- **Fix / Socket -11 Timeout Recovery:** Al detectar error `-11` (`HTTPC_ERROR_READ_TIMEOUT`) o `-1`, se fuerza la recuperación del vínculo de red con `forceWifiReconnect()` antes del próximo poll.
+- **Fix / Config Filter:** Se agregó filtrado de SSIDs placeholders (`user`, `string`, `ssid`, `placeholder`, `null`) traídos por `/arduino/config` para evitar sobrescribir las credenciales guardadas en NVS.
+- **FW Bump:** Se incrementó `FW_VERSION` en `config.h` a `0.0.19`.
+
 ## [0.0.18] - 2026-08-03
 
 - **Rendimiento / Red:** Se ajustó el intervalo de polling de 1000ms (1s) a 3000ms (3s) (`POLL_INTERVAL_MS = 3000`). Esto reduce el tráfico HTTPS en un 66%, elimina el encolamiento de sockets durante fluctuaciones de Wi-Fi/4G y le da espacio a la pila de red del ESP32 para procesar ACKs y liberar memoria RAM.

@@ -141,7 +141,13 @@ int executeHttpRequest(const String& url, const String& method, const String& re
     connectionLossesCount++;
     
     keepAliveHttp.end();
+    keepAliveClient.stop();
     keepAliveActive = false;
+
+    if (code == -11 || code == -1) {
+      Serial.printf("[HTTP-REUSE] Alerta: Fallo critico de socket (%d). Forzando recuperacion de red...\n", code);
+      forceWifiReconnect("fallo HTTP socket -11/-1");
+    }
   } else if (code == HTTP_CODE_OK) {
     communicationState = COMM_WEB_LINK_OK;
     markNetworkOk();
@@ -405,7 +411,15 @@ bool fetchConfigOnce() {
     pass = extractStringField(response, "wifi_pass");
   }
 
-  if (ssid.length() > 0) {
+  bool isInvalidSsid = false;
+  String lowerSsid = ssid;
+  lowerSsid.toLowerCase();
+  if (lowerSsid == "user" || lowerSsid == "string" || lowerSsid == "ssid" || lowerSsid == "null" || lowerSsid == "placeholder" || lowerSsid == "default") {
+    isInvalidSsid = true;
+    Serial.printf("[CONFIG] SSID omitido por ser placeholder invalido del servidor: %s\n", ssid.c_str());
+  }
+
+  if (ssid.length() > 0 && !isInvalidSsid) {
     saveWifiConfig(ssid, pass);
   }
 
