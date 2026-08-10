@@ -60,7 +60,7 @@ void setup() {
   }
 
   // Primer poll inmediato. El heartbeat y status log quedan diferidos para un arranque instantáneo.
-  lastPollMs = millis() - POLL_INTERVAL_MS;
+  lastPollMs = millis() - pollIntervalMs;
   lastHeartbeatMs = millis();
   lastNetworkOkMs = millis();
   // El primer status log de diagnóstico se enviará 15 segundos después del arranque.
@@ -137,7 +137,7 @@ void loop() {
   }
 #endif
 
-  bool pollDue = now - lastPollMs >= POLL_INTERVAL_MS;
+  bool pollDue = now - lastPollMs >= pollIntervalMs;
   if (pollDue) {
     setBreadcrumb("loop: poll");
     bool ok = pollOnce();

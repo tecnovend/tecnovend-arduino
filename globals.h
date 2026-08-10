@@ -13,6 +13,7 @@
 extern Preferences preferences;
 
 extern unsigned long lastPollMs;
+extern unsigned long pollIntervalMs;
 extern unsigned long lastHeartbeatMs;
 extern unsigned long lastStartupHeartbeatAttemptMs;
 extern unsigned long lastStateHeartbeatAttemptMs;

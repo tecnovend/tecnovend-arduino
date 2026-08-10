@@ -7,6 +7,7 @@
 Preferences preferences;
 
 unsigned long lastPollMs = 0;
+unsigned long pollIntervalMs = POLL_INTERVAL_MS;
 unsigned long lastHeartbeatMs = 0;
 unsigned long lastStartupHeartbeatAttemptMs = 0;
 unsigned long lastStateHeartbeatAttemptMs = 0;

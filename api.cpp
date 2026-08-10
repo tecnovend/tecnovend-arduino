@@ -437,13 +437,23 @@ bool fetchConfigOnce() {
     pulseLowMs = 250;
   }
 
+  int pollSecConfig = extractIntField(configObject.length() > 0 ? configObject : response, "poll_interval_s", 0);
+  if (pollSecConfig <= 0) {
+    pollSecConfig = extractIntField(response, "poll_interval_s", 0);
+  }
+  if (pollSecConfig > 0 && pollSecConfig <= 60) {
+    pollIntervalMs = pollSecConfig * 1000UL;
+  }
+
   configLoadedThisBoot = true;
   Serial.print("Config OK. pulse_value=");
   Serial.print(pulseValue);
   Serial.print(" duration_ms=");
   Serial.print(pulseHighMs);
   Serial.print(" gap_ms=");
-  Serial.println(pulseLowMs);
+  Serial.print(pulseLowMs);
+  Serial.print(" poll_interval_s=");
+  Serial.println(pollIntervalMs / 1000);
   showConfigOkLed();
   return true;
 }
@@ -454,6 +464,11 @@ bool pollOnce() {
 
   if (!httpGet(url, response)) {
     return false;
+  }
+
+  int pollSecResp = extractIntField(response, "poll_interval_s", 0);
+  if (pollSecResp > 0 && pollSecResp <= 60) {
+    pollIntervalMs = pollSecResp * 1000UL;
   }
 
   Pulse pulses[8];
