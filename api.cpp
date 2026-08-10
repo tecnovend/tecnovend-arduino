@@ -359,13 +359,14 @@ bool sendRemoteStatusLog() {
   body += "\",\"last_breadcrumb\":\"";
   body += jsonEscape(String(rtcLastBreadcrumb));
   
-  // Agregar métricas de persistencia/reutilización HTTPS para diagnóstico
   body += "\",\"ssl_handshakes\":";
   body += sslHandshakesCount;
   body += ",\"connection_reuses\":";
   body += connectionReusesCount;
   body += ",\"connection_losses\":";
   body += connectionLossesCount;
+  body += ",\"poll_interval_s\":";
+  body += (pollIntervalMs / 1000);
   body += "}";
 
   currentNetworkOperation = "status_log post";
