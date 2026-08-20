@@ -3,6 +3,11 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.24] - 2026-08-20
+
+- **API Base URL Update:** Se configuró `API_BASE_URL = "http://www.vendpoint.com.ar"` utilizando HTTP plano en puerto 80. Permite a las placas conectar a la infraestructura de Fly.io sin sobrecarga SSL y sin depender del proxy TCP rígido de Railway.
+- **FW Bump:** Se incrementó `FW_VERSION` en `config.h` a `0.0.24`.
+
 ## [0.0.23] - 2026-08-10
 
 - **Configuración Dinámica de Polling:** Soporte para frecuencia de polling dinámico enviada por el servidor API (`poll_interval_s` en los endpoints `/arduino/config` y `/arduino/poll`). La placa adapta el intervalo entre 1s y 60s en tiempo real.
