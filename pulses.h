@@ -11,3 +11,6 @@ void queuePulseResult(const Pulse& pulse, const String& status, const String& re
 bool reportPulseResultWithRetries(const Pulse& pulse, const String& status, const String& reason);
 void retryPendingPulseResults();
 void executePulse(const Pulse& pulse);
+bool isPulseAlreadyExecuted(const String& pulseId);
+void recordExecutedPulse(const Pulse& pulse);
+

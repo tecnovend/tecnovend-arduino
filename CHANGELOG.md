@@ -3,6 +3,11 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.25] - 2026-09-21
+
+- **Deduplicación e Idempotencia de Pulsos (Memoria RAM):** Se implementó un buffer circular en memoria RAM de 128 posiciones (`MAX_RECENT_PULSES = 128`) para registrar los IDs de pulsos ejecutados. Si un pulso ya procesado vuelve a recibirse en un poll posterior (por reintento de red ante fallas al recibir el ACK en el servidor), la placa omite la activación del relé físico y reenvía directamente el ACK, evitando doble dispensación.
+- **FW Bump:** Se incrementó `FW_VERSION` en `config.h` a `0.0.25`.
+
 ## [0.0.24] - 2026-08-20
 
 - **API Base URL Update:** Se configuró `API_BASE_URL = "http://www.vendpoint.com.ar"` utilizando HTTP plano en puerto 80. Permite a las placas conectar a la infraestructura de Fly.io sin sobrecarga SSL y sin depender del proxy TCP rígido de Railway.

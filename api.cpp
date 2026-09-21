@@ -484,6 +484,12 @@ bool pollOnce() {
   Serial.println(pulseCount);
 
   for (int i = 0; i < pulseCount; i++) {
+    if (isPulseAlreadyExecuted(pulses[i].id)) {
+      Serial.printf("[PULSE-DEDUP] Pulso %s ya ejecutado previamente. Omitiendo rele y re-enviando ACK.\n", pulses[i].id.c_str());
+      reportPulseResultWithRetries(pulses[i], "executed", "ok");
+      continue;
+    }
+
     if (!canAcceptPulse()) {
       Serial.print("Pulso recibido pero no ejecutado: maquina ocupada/no disponible: ");
       Serial.println(pulses[i].id);
@@ -491,6 +497,7 @@ bool pollOnce() {
     }
 
     executePulse(pulses[i]);
+    recordExecutedPulse(pulses[i]);
     reportPulseResultWithRetries(pulses[i], "executed", "ok");
     observedSalePulse = pulses[i];
     hasObservedSalePulse = true;

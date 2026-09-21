@@ -18,7 +18,7 @@ static const char* API_BASE_URL = "http://www.vendpoint.com.ar";
 // ID alfanumerico grabado en el firmware. El servidor lo vincula con la maquina.
 static const char* INITIAL_ARDUINO_ID = "ARD-000002";
 static const char* API_KEY = "";
-static const char* FW_VERSION = "0.0.24";
+static const char* FW_VERSION = "0.0.25";
 
 // ---- LED ----
 #define USE_RGB_LED 1
@@ -65,6 +65,7 @@ static const int WIFI_CONNECT_ATTEMPTS = 5;
 static const int SAVED_WIFI_CONNECT_ATTEMPTS = 2;
 static const int NETWORK_FAILURES_BEFORE_RECOVERY = 8;
 static const int RESULT_QUEUE_SIZE = 8;
+static const int MAX_RECENT_PULSES = 128;
 
 // ---- Seguridad ----
 #define ENABLE_WATCHDOG 1

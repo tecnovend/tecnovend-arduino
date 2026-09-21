@@ -93,3 +93,45 @@ void executePulse(const Pulse& pulse) {
     }
   }
 }
+
+// ============================================================================
+// Buffer circular de deduplicacion de pulsos (idempotencia en memoria RAM)
+// ============================================================================
+struct ExecutedPulseRecord {
+  char id[16];
+  uint16_t count;
+  unsigned long executedAtMs;
+};
+
+static ExecutedPulseRecord executedPulseHistory[MAX_RECENT_PULSES];
+static int executedPulseCount = 0;
+static int executedPulseHead = 0;
+
+bool isPulseAlreadyExecuted(const String& pulseId) {
+  if (pulseId.length() == 0) return false;
+  int checkCount = (executedPulseCount < MAX_RECENT_PULSES) ? executedPulseCount : MAX_RECENT_PULSES;
+  for (int i = 0; i < checkCount; i++) {
+    if (pulseId.equals(executedPulseHistory[i].id)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void recordExecutedPulse(const Pulse& pulse) {
+  if (pulse.id.length() == 0) return;
+  if (isPulseAlreadyExecuted(pulse.id)) return;
+
+  strncpy(executedPulseHistory[executedPulseHead].id, pulse.id.c_str(), sizeof(executedPulseHistory[executedPulseHead].id) - 1);
+  executedPulseHistory[executedPulseHead].id[sizeof(executedPulseHistory[executedPulseHead].id) - 1] = '\0';
+  executedPulseHistory[executedPulseHead].count = (uint16_t)pulse.count;
+  executedPulseHistory[executedPulseHead].executedAtMs = millis();
+
+  executedPulseHead = (executedPulseHead + 1) % MAX_RECENT_PULSES;
+  if (executedPulseCount < MAX_RECENT_PULSES) {
+    executedPulseCount++;
+  }
+  Serial.printf("[PULSE-DEDUP] Pulso %s registrado en historial (total historico: %d/%d)\n",
+                pulse.id.c_str(), executedPulseCount, MAX_RECENT_PULSES);
+}
+
