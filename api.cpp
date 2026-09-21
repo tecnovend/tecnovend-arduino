@@ -367,6 +367,16 @@ bool sendRemoteStatusLog() {
   body += connectionLossesCount;
   body += ",\"poll_interval_s\":";
   body += (pollIntervalMs / 1000);
+  body += ",\"dedup_acks_resent\":";
+  body += dedupAcksResentCount;
+  body += ",\"last_dedup_pulse_id\":\"";
+  body += jsonEscape(lastDedupPulseId);
+  body += "\"";
+  body += ",\"skipped_pulses_busy\":";
+  body += skippedPulsesBusyCount;
+  body += ",\"last_skipped_pulse_id\":\"";
+  body += jsonEscape(lastSkippedPulseId);
+  body += "\"";
   body += "}";
 
   currentNetworkOperation = "status_log post";
@@ -485,14 +495,19 @@ bool pollOnce() {
 
   for (int i = 0; i < pulseCount; i++) {
     if (isPulseAlreadyExecuted(pulses[i].id)) {
-      Serial.printf("[PULSE-DEDUP] Pulso %s ya ejecutado previamente. Omitiendo rele y re-enviando ACK.\n", pulses[i].id.c_str());
+      dedupAcksResentCount++;
+      lastDedupPulseId = pulses[i].id;
+      Serial.printf("[PULSE-DEDUP] Pulso %s ya ejecutado previamente. Omitiendo rele y re-enviando ACK (total dedup: %u).\n",
+                    pulses[i].id.c_str(), dedupAcksResentCount);
       reportPulseResultWithRetries(pulses[i], "executed", "ok");
       continue;
     }
 
     if (!canAcceptPulse()) {
-      Serial.print("Pulso recibido pero no ejecutado: maquina ocupada/no disponible: ");
-      Serial.println(pulses[i].id);
+      skippedPulsesBusyCount++;
+      lastSkippedPulseId = pulses[i].id;
+      Serial.printf("[PULSE-SKIP] Pulso %s recibido pero omitido: maquina ocupada/inhibit (total skips: %u).\n",
+                    pulses[i].id.c_str(), skippedPulsesBusyCount);
       continue;
     }
 

@@ -49,6 +49,10 @@ unsigned long observedSaleStartedMs = 0;
 String heartbeatReason = "";
 String heartbeatAffectedPulseId = "";
 String currentNetworkOperation = "idle";
+unsigned int skippedPulsesBusyCount = 0;
+unsigned int dedupAcksResentCount = 0;
+String lastSkippedPulseId = "";
+String lastDedupPulseId = "";
 
 #define RTC_BREADCRUMB_MAGIC 0xDEADE10A
 RTC_NOINIT_ATTR char rtcBreadcrumb[64];

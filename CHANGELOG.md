@@ -3,6 +3,11 @@
 Registro de cambios del firmware. Las entradas con cambios **funcionales** deben
 acompañarse de una subida de `FW_VERSION` en `config.h` (ver [CLAUDE.md](CLAUDE.md)).
 
+## [0.0.26] - 2026-09-21
+
+- **Telemetría y Diagnóstico de Pulsos:** Se incorporaron contadores y métricas en `status_log` (`skipped_pulses_busy`, `last_skipped_pulse_id`, `dedup_acks_resent`, `last_dedup_pulse_id`) para monitorear en la nube cuántos pulsos se omiten por máquina ocupada y cuántos reintentos se confirman por deduplicación.
+- **FW Bump:** Se incrementó `FW_VERSION` en `config.h` a `0.0.26`.
+
 ## [0.0.25] - 2026-09-21
 
 - **Deduplicación e Idempotencia de Pulsos (Memoria RAM):** Se implementó un buffer circular en memoria RAM de 128 posiciones (`MAX_RECENT_PULSES = 128`) para registrar los IDs de pulsos ejecutados. Si un pulso ya procesado vuelve a recibirse en un poll posterior (por reintento de red ante fallas al recibir el ACK en el servidor), la placa omite la activación del relé físico y reenvía directamente el ACK, evitando doble dispensación.
